@@ -1,0 +1,57 @@
+:root {
+  /* Colors - Light Mode (Default) */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --accent-color: #f1f5f9;
+  
+  /* Status Colors */
+  --status-instock: #0ea5e9;
+  --status-installed: #10b981;
+  --status-sold: #6366f1;
+  --status-maintenance: #f59e0b;
+  
+  /* Spacing & Borders */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Mode Overrides */
+.dark-theme {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --bg-sidebar: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --accent-color: #1e293b;
+  
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
+}
+
+/* Global Transitions for Theme Switching */
+* {
+  transition: background-color var(--transition-medium), 
+              border-color var(--transition-medium), 
+              color var(--transition-fast),
+              box-shadow var(--transition-medium);
+}
