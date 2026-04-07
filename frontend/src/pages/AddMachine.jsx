@@ -12,6 +12,7 @@ const AddMachine = () => {
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
   const { addToast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -56,29 +57,80 @@ const AddMachine = () => {
     }
   }, [id, isEdit]);
 
+  const validateField = (name, value) => {
+    let error = '';
+    const trimmedValue = value ? value.toString().trim() : '';
+
+    // Required check
+    if (!trimmedValue && name !== 'description') {
+      return 'This field is required';
+    }
+
+    // Text only validation (Letters and spaces)
+    if (['machineName', 'plantName'].includes(name)) {
+      if (!/^[A-Za-z\s]+$/.test(trimmedValue)) {
+        error = 'Only letters are allowed';
+      }
+    }
+
+    // Number validation
+    if (name === 'cost') {
+      if (!/^\d+(\.\d+)?$/.test(trimmedValue)) {
+        error = 'Only numbers are allowed';
+      } else if (parseFloat(trimmedValue) <= 0) {
+        error = 'Cost must be a positive number';
+      }
+    }
+
+    // Date validation (No future dates)
+    if (name === 'purchaseDate') {
+      const selectedDate = new Date(trimmedValue);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Allow today
+      if (selectedDate > today) {
+        error = 'Future date is not allowed';
+      }
+    }
+
+    return error;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Update data
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear global error
+    if (error) setError(null);
+
+    // Validate field in real-time
+    const fieldError = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: fieldError }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(formData).forEach(key => {
+      const fieldError = validateField(key, formData[key]);
+      if (fieldError) {
+        newErrors[key] = fieldError;
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const machineName = formData.machineName.trim();
-    const serialNumber = formData.serialNumber.trim();
-    const plantName = formData.plantName.trim();
-    const description = (formData.description || '').trim();
-
-    if (!machineName || !serialNumber || !plantName || !formData.purchaseDate || !formData.cost || !formData.gstPercentage || !formData.status) {
-      return setError('Please fill in all required fields');
-    }
-
-    if (isNaN(formData.cost) || parseFloat(formData.cost) <= 0) {
-      return setError('Please enter a valid positive cost');
-    }
-
-    if (isNaN(formData.gstPercentage) || parseFloat(formData.gstPercentage) < 0) {
-      return setError('Please enter a valid GST percentage');
+    if (!validateForm()) {
+      addToast('Please correct the validation errors', 'error');
+      return;
     }
 
     try {
@@ -86,13 +138,14 @@ const AddMachine = () => {
       setError(null);
       
       const payload = {
-        ...formData,
-        machineName,
-        serialNumber,
-        plantName,
-        description,
+        machineName: formData.machineName.trim(),
+        serialNumber: formData.serialNumber.trim(),
+        plantName: formData.plantName.trim(),
+        purchaseDate: formData.purchaseDate,
         cost: parseFloat(formData.cost),
-        gstPercentage: parseInt(formData.gstPercentage)
+        gstPercentage: parseInt(formData.gstPercentage),
+        status: formData.status,
+        description: (formData.description || '').trim()
       };
 
       const response = isEdit 
@@ -132,6 +185,7 @@ const AddMachine = () => {
               value={formData.machineName}
               onChange={handleChange}
               required
+              error={errors.machineName}
             />
             <FormInput
               label="Serial Number"
@@ -140,6 +194,7 @@ const AddMachine = () => {
               value={formData.serialNumber}
               onChange={handleChange}
               required
+              error={errors.serialNumber}
             />
             <FormInput
               label="Plant Name"
@@ -148,6 +203,7 @@ const AddMachine = () => {
               value={formData.plantName}
               onChange={handleChange}
               required
+              error={errors.plantName}
             />
 
             <FormInput
@@ -157,6 +213,7 @@ const AddMachine = () => {
               value={formData.purchaseDate}
               onChange={handleChange}
               required
+              error={errors.purchaseDate}
             />
             <FormInput
               label="Cost (Excl. GST)"
@@ -166,6 +223,7 @@ const AddMachine = () => {
               value={formData.cost}
               onChange={handleChange}
               required
+              error={errors.cost}
             />
             <FormInput
               label="GST Percentage"
@@ -175,6 +233,7 @@ const AddMachine = () => {
               value={formData.gstPercentage}
               onChange={handleChange}
               required
+              error={errors.gstPercentage}
             />
             <FormInput
               label="Status"
@@ -184,6 +243,7 @@ const AddMachine = () => {
               value={formData.status}
               onChange={handleChange}
               required
+              error={errors.status}
             />
             <div className="full-width">
               <FormInput
@@ -193,11 +253,11 @@ const AddMachine = () => {
                 placeholder="Any specific description or requirements..."
                 value={formData.description}
                 onChange={handleChange}
+                error={errors.description}
               />
             </div>
           </div>
 
-          {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
           <div className="form-actions flex justify-end gap-4" style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-color)' }}>
             <button type="button" className="btn btn-secondary" onClick={() => navigate('/machines')} disabled={loading}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>

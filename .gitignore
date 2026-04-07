@@ -1,5 +1,3 @@
-# --- Root .gitignore for AssetFlow (MERN) ---
-
 # Environment Variables (CRITICAL)
 .env
 .env.*

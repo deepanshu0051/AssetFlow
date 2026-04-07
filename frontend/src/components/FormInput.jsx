@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import './FormInput.css';
 
-const FormInput = ({ label, type = 'text', placeholder, value, onChange, options, name, required = false }) => {
+const FormInput = ({ label, type = 'text', placeholder, value, onChange, options, name, required = false, error }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -13,14 +13,14 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
-    <div className="form-group">
-      {label && <label className="form-label">{label}</label>}
+    <div className={`form-group ${error ? 'has-error' : ''}`}>
+      {label && <label className="form-label">{label}{required && <span className="required-star">*</span>}</label>}
       
       <div className="input-with-icon">
         {type === 'select' ? (
           <select 
             name={name} 
-            className="form-control" 
+            className={`form-control ${error ? 'error' : ''}`} 
             value={value} 
             onChange={onChange}
             required={required}
@@ -33,7 +33,7 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
         ) : type === 'textarea' ? (
           <textarea
             name={name}
-            className="form-control textarea"
+            className={`form-control textarea ${error ? 'error' : ''}`}
             placeholder={placeholder}
             value={value}
             onChange={onChange}
@@ -41,11 +41,11 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
             rows={4}
           />
         ) : (
-          <div className="input-wrapper">
+          <div className={`input-wrapper ${error ? 'error' : ''}`}>
             <input
               type={inputType}
               name={name}
-              className="form-control"
+              className={`form-control ${error ? 'error' : ''}`}
               placeholder={placeholder}
               value={value}
               onChange={onChange}
@@ -64,6 +64,7 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
           </div>
         )}
       </div>
+      {error && <span className="error-message">{error}</span>}
     </div>
   );
 };

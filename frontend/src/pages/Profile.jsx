@@ -32,6 +32,7 @@ const Profile = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Update formData when user changes
   useEffect(() => {
@@ -45,36 +46,79 @@ const Profile = () => {
     }
   }, [user]);
 
+  const validateField = (name, value) => {
+    let error = '';
+    const trimmedValue = value ? value.toString().trim() : '';
+
+    if (['name', 'email', 'phoneNumber'].includes(name) && !trimmedValue) {
+      return 'This field is required';
+    }
+
+    if (['name', 'companyName'].includes(name) && trimmedValue) {
+      if (!/^[A-Za-z\s]+$/.test(trimmedValue)) {
+        error = 'Only letters are allowed';
+      }
+    }
+
+    if (name === 'email' && trimmedValue) {
+      if (!/^[^\s@]+@gmail\.com$/.test(trimmedValue)) {
+        error = 'Enter a valid Gmail address';
+      }
+    }
+
+    if (name === 'phoneNumber' && trimmedValue) {
+      if (!/^\+?\d+$/.test(trimmedValue)) {
+        error = 'Only numbers are allowed';
+      }
+    }
+
+    return error;
+  };
+
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear global message
+    if (message.text) setMessage({ type: '', text: '' });
+
+    // Validate field
+    const fieldError = validateField(name, value);
+    setFieldErrors(prev => ({ ...prev, [name]: fieldError }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key]);
+      if (error) {
+        newErrors[key] = error;
+        isValid = false;
+      }
+    });
+
+    setFieldErrors(newErrors);
+    return isValid;
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      setMessage({ type: 'error', text: 'Please correct the errors before saving.' });
+      return;
+    }
+
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    const trimmedName = formData.name.trim();
-    const trimmedPhone = formData.phoneNumber.trim();
-    const trimmedEmail = formData.email.trim();
-    
-    if (!trimmedName || !trimmedPhone || !trimmedEmail) {
-      setLoading(false);
-      return setMessage({ type: 'error', text: 'Name, Email, and Phone Number are required fields.' });
-    }
-
-    const phoneRegex = /^\+\d{1,2}\d{10}$/;
-    if (!phoneRegex.test(trimmedPhone)) {
-      setLoading(false);
-      return setMessage({ type: 'error', text: 'Enter valid phone number with country code and 10 digits.' });
-    }
-
     const payload = {
-      ...formData,
-      name: trimmedName,
-      email: trimmedEmail,
-      phoneNumber: trimmedPhone,
-      companyName: formData.companyName.trim()
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
+      companyName: (formData.companyName || '').trim()
     };
 
     try {
@@ -82,6 +126,7 @@ const Profile = () => {
       if (res.success) {
         updateUser(res.data);
         setIsEditing(false);
+        setFieldErrors({});
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
       }
     } catch (err) {
@@ -89,6 +134,18 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phoneNumber: user.phoneNumber || '',
+      companyName: user.companyName || ''
+    });
+    setFieldErrors({});
+    setIsEditing(false);
+    setMessage({ type: '', text: '' });
   };
 
   const handleLogout = () => {
@@ -145,7 +202,7 @@ const Profile = () => {
                 </button>
                 <button 
                   className="btn-premium btn-outline-premium" 
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancel}
                   style={{ width: 'auto', padding: '0.6rem 1.2rem' }}
                 >
                   <X size={16} /> Cancel
@@ -158,14 +215,17 @@ const Profile = () => {
             <div className="info-field-group">
               <span className="field-label"><UserIcon size={14} /> Full Name</span>
               {isEditing ? (
-                <input 
-                  type="text" 
-                  name="name" 
-                  className="form-input-premium" 
-                  value={formData.name} 
-                  onChange={handleInputChange} 
-                  required
-                />
+                <>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    className={`form-input-premium ${fieldErrors.name ? 'error' : ''}`} 
+                    value={formData.name} 
+                    onChange={handleInputChange} 
+                    required
+                  />
+                  {fieldErrors.name && <span className="profile-error-msg">{fieldErrors.name}</span>}
+                </>
               ) : (
                 <p className="field-value">{user.name}</p>
               )}
@@ -174,14 +234,17 @@ const Profile = () => {
             <div className="info-field-group">
               <span className="field-label"><Mail size={14} /> Email Address</span>
               {isEditing ? (
-                <input 
-                  type="email" 
-                  name="email" 
-                  className="form-input-premium" 
-                  value={formData.email} 
-                  onChange={handleInputChange} 
-                  required
-                />
+                <>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    className={`form-input-premium ${fieldErrors.email ? 'error' : ''}`} 
+                    value={formData.email} 
+                    onChange={handleInputChange} 
+                    required
+                  />
+                  {fieldErrors.email && <span className="profile-error-msg">{fieldErrors.email}</span>}
+                </>
               ) : (
                 <p className="field-value">{user.email}</p>
               )}
@@ -190,16 +253,19 @@ const Profile = () => {
             <div className="info-field-group">
               <span className="field-label"><Phone size={14} /> Phone Number</span>
               {isEditing ? (
-                <input 
-                  type="tel" 
-                  name="phoneNumber" 
-                  className="form-input-premium" 
-                  placeholder="+91XXXXXXXXXX"
-                  value={formData.phoneNumber} 
-                  onChange={handleInputChange} 
-                  required
-                  maxLength={13}
-                />
+                <>
+                  <input 
+                    type="tel" 
+                    name="phoneNumber" 
+                    className={`form-input-premium ${fieldErrors.phoneNumber ? 'error' : ''}`} 
+                    placeholder="+91XXXXXXXXXX"
+                    value={formData.phoneNumber} 
+                    onChange={handleInputChange} 
+                    required
+                    maxLength={13}
+                  />
+                  {fieldErrors.phoneNumber && <span className="profile-error-msg">{fieldErrors.phoneNumber}</span>}
+                </>
               ) : (
                 <p className="field-value">{user.phoneNumber || 'Not specified'}</p>
               )}
@@ -208,14 +274,17 @@ const Profile = () => {
             <div className="info-field-group">
               <span className="field-label"><Building2 size={14} /> Company Name</span>
               {isEditing ? (
-                <input 
-                  type="text" 
-                  name="companyName" 
-                  className="form-input-premium" 
-                  placeholder="Enter company name"
-                  value={formData.companyName} 
-                  onChange={handleInputChange} 
-                />
+                <>
+                  <input 
+                    type="text" 
+                    name="companyName" 
+                    className={`form-input-premium ${fieldErrors.companyName ? 'error' : ''}`} 
+                    placeholder="Enter company name"
+                    value={formData.companyName} 
+                    onChange={handleInputChange} 
+                  />
+                  {fieldErrors.companyName && <span className="profile-error-msg">{fieldErrors.companyName}</span>}
+                </>
               ) : (
                 <p className="field-value">{user.companyName || 'Not specified'}</p>
               )}
