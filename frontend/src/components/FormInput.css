@@ -95,6 +95,27 @@ select.form-control {
   animation: slideDown 0.2s ease-out;
 }
 
+.input-wrapper.with-prefix .form-control {
+  padding-left: 55px;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  background-color: var(--accent-color);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  pointer-events: none;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

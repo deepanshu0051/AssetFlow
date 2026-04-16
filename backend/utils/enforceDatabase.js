@@ -15,14 +15,15 @@ const enforceDatabaseStructure = async () => {
 
     const allowedCollections = ['users', 'machines', 'deleted_machines'];
 
-    // 1. Drop disallowed collections
+    // 1. Log disallowed collections (DO NOT DROP in production)
     for (const name of collectionNames) {
       if (!allowedCollections.includes(name)) {
-        try {
-          await db.dropCollection(name);
-        } catch (dropErr) {
-          console.error(`Failed to drop collection ${name}: ${dropErr.message}`);
-        }
+        console.warn(`[SAFETY] Found unexpected collection: ${name}. Automatic deletion is disabled for safety.`);
+        // try {
+        //   await db.dropCollection(name);
+        // } catch (dropErr) {
+        //   console.error(`Failed to drop collection ${name}: ${dropErr.message}`);
+        // }
       }
     }
 

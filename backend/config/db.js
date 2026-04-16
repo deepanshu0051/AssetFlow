@@ -2,14 +2,15 @@ const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const dns = require('dns');
 
-// Set DNS servers to Google's to help with SRV resolution in some environments
 try {
   dns.setServers(['8.8.8.8', '8.8.4.4']);
 } catch (e) {
-  console.warn('Could not set custom DNS servers, using default.');
+  // Silent or log to winston if exported
 }
 
 let mongoServer;
+
+const { logger } = require('../middleware/logger');
 
 const connectDB = async () => {
   const maxRetries = 3;
@@ -25,25 +26,31 @@ const connectDB = async () => {
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000,
       });
+      logger.info('MongoDB Atlas Connected successfully');
       return;
     } catch (error) {
       retries++;
-      console.error(`Atlas Connection Attempt ${retries} failed: ${error.message}`);
+      logger.error(`Atlas Connection Attempt ${retries} failed: ${error.message}`);
       
+      if (error.message.includes('SSL') || error.message.includes('serverSelectionTimeout')) {
+        logger.warn('TIP: If you are seeing SSL or timeout errors, ensure your current IP is whitelisted in MongoDB Atlas dashboard.');
+      }
+
       if (retries >= maxRetries) {
         if (!isProduction) {
-          
+          logger.info('Falling back to Local Mock Database (MongoMemoryServer)...');
           try {
             mongoServer = await MongoMemoryServer.create();
             const mongoUri = mongoServer.getUri();
             await mongoose.connect(mongoUri);
+            logger.info('Connected to Local Mock Database');
             return;
           } catch (fallbackError) {
-            console.error(`Failed to start Local Mock Database: ${fallbackError.message}`);
+            logger.error(`Failed to start Local Mock Database: ${fallbackError.message}`);
             process.exit(1);
           }
         } else {
-          console.error('Max retries reached in Production. Exiting.');
+          logger.error('Max retries reached in Production. Exiting.');
           process.exit(1);
         }
       } else {

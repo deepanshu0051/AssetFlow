@@ -1,8 +1,10 @@
+const { logger } = require('./logger');
+
 const errorHandler = (err, req, res, next) => {
   // Log the full error for debugging
-  console.error('[ERROR HANDLER]', err.name, '-', err.message);
+  logger.error(`${err.name} - ${err.message}`);
   if (process.env.NODE_ENV === 'development') {
-    console.error(err.stack);
+    logger.debug(err.stack);
   }
 
   // Mongoose bad ObjectId

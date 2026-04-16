@@ -75,13 +75,35 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
   await user.save({ validateBeforeSave: false });
 
-  // In a real app, you would send an email here.
-  // For this project, we return the token in the response for simulation.
-  res.status(200).json({
-    success: true,
-    message: 'Reset token generated',
-    resetToken: resetToken // Returning token for easy testing/simulation
-  });
+  const sendEmail = require('../utils/sendEmail');
+
+  // Create reset url
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
+
+  const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Password reset token',
+      text: message
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Email sent'
+    });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Email could not be sent'
+    });
+  }
 });
 
 // @desc    Reset password

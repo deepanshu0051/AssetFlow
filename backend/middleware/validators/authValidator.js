@@ -15,6 +15,11 @@ exports.registerValidation = [
     .withMessage('Password is required')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
+  body('phoneNumber')
+    .notEmpty()
+    .withMessage('Phone number is required')
+    .matches(/^\+91[0-9]{10}$/)
+    .withMessage('Phone number must be in format +91 followed by 10 digits (e.g., +919012345678)'),
 ];
 
 exports.loginValidation = [

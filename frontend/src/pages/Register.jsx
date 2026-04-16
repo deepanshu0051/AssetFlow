@@ -9,7 +9,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneNumber: '+91',
+    phoneNumber: '',
     password: '',
     confirmPassword: ''
   });
@@ -25,7 +25,18 @@ const Register = () => {
   }
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Strict numeric only for phone
+    if (name === 'phoneNumber') {
+      const numericValue = value.replace(/[^0-9]/g, '');
+      if (numericValue.length <= 10) {
+        setFormData({ ...formData, [name]: numericValue });
+      }
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -54,10 +65,15 @@ const Register = () => {
       return setError('Please enter a valid email address');
     }
 
-    const phoneRegex = /^\+\d{1,2}\d{10}$/;
-    if (!phoneRegex.test(trimmedData.phoneNumber)) {
-      return setError('Enter valid phone number with country code and 10 digits.');
+    if (trimmedData.phoneNumber.length !== 10) {
+      return setError('Enter a valid 10-digit phone number');
     }
+
+    // Prepare final data with +91 prefix for backend
+    const finalData = {
+      ...trimmedData,
+      phoneNumber: `+91${trimmedData.phoneNumber}`
+    };
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
     if (!passwordRegex.test(trimmedData.password)) {
@@ -72,7 +88,7 @@ const Register = () => {
     setError('');
 
     try {
-      const res = await register(trimmedData);
+      const res = await register(finalData);
       if (res.success) {
         setSuccess(true);
         setTimeout(() => {
@@ -139,9 +155,11 @@ const Register = () => {
             label="Phone Number"
             name="phoneNumber"
             type="tel"
-            placeholder="+91XXXXXXXXXX"
+            placeholder="90XXXXXXXX"
             value={formData.phoneNumber}
             onChange={handleChange}
+            prefix="+91"
+            maxLength={10}
             required
           />
           <FormInput

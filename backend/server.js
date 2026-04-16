@@ -4,9 +4,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 // Security: custom deepSanitize is used for mongo sanitize and xss protection
+const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
-const logger = require('./middleware/logger');
+const { requestLogger: logger } = require('./middleware/logger');
 
 // Load env vars
 dotenv.config({ path: '../.env' });
@@ -17,11 +18,21 @@ const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// Enable CORS - Must be before routes and other middleware that sends responses
+// Enable CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'];
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -32,36 +43,18 @@ app.use(cors(corsOptions));
 // Body parser
 app.use(express.json());
 
-// Request logging
+// Request logging (Winston based)
 app.use(logger);
 
 // Set security headers
 app.use(helmet());
 
-// Security: sanitize request body — creates a NEW object to avoid sealed-property issues
-const deepSanitize = (input) => {
-  if (!input || typeof input !== 'object') return input;
-  const clean = {};
-  for (const key of Object.keys(input)) {
-    // Drop mongo operator keys
-    if (key.startsWith('$') || key.includes('.')) continue;
-    const val = input[key];
-    if (typeof val === 'string') {
-      // Strip HTML tags (XSS protection)
-      clean[key] = val.replace(/<[^>]*>?/gm, '');
-    } else if (typeof val === 'object' && val !== null) {
-      clean[key] = deepSanitize(val);
-    } else {
-      clean[key] = val;
-    }
-  }
-  return clean;
-};
-
+// Data sanitization against NoSQL query injection
 app.use((req, res, next) => {
-  if (req.body && typeof req.body === 'object') {
-    req.body = deepSanitize(req.body);  // Replace body with a fresh clean copy
-  }
+  if (req.body) mongoSanitize.sanitize(req.body);
+  if (req.params) mongoSanitize.sanitize(req.params);
+  if (req.headers) mongoSanitize.sanitize(req.headers);
+  // Skip req.query as it's a read-only getter in Express 5
   next();
 });
 
@@ -71,6 +64,18 @@ const limiter = rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api', limiter);
+
+// Strict rate limiting for auth routes (Task 1)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 mins
+  max: 5,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+  }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgotpassword', authLimiter);
 
 // Mount routes
 app.use('/api/machines', machineRoutes);
@@ -101,7 +106,8 @@ const startServer = async () => {
     app.listen(PORT, () => {
     });
   } catch (error) {
-    console.error(`Failed to start server: ${error.message}`);
+    const { logger } = require('./middleware/logger');
+    logger.error(`Failed to start server: ${error.message}`);
     process.exit(1);
   }
 };

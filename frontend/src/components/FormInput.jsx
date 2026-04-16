@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import './FormInput.css';
 
-const FormInput = ({ label, type = 'text', placeholder, value, onChange, options, name, required = false, error }) => {
+const FormInput = ({ label, type = 'text', placeholder, value, onChange, options, name, required = false, error, prefix, maxLength }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -41,7 +41,8 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
             rows={4}
           />
         ) : (
-          <div className={`input-wrapper ${error ? 'error' : ''}`}>
+          <div className={`input-wrapper ${error ? 'error' : ''} ${prefix ? 'with-prefix' : ''}`}>
+            {prefix && <span className="input-prefix">{prefix}</span>}
             <input
               type={inputType}
               name={name}
@@ -50,6 +51,7 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, options
               value={value}
               onChange={onChange}
               required={required}
+              maxLength={maxLength}
             />
             {isPassword && (
               <button 
