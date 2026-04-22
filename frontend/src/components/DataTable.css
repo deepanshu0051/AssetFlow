@@ -59,15 +59,21 @@
   background: var(--accent-color);
 }
 
-.action-btn.view { color: var(--primary); border-color: rgba(37, 99, 235, 0.2); }
+.action-btn.view { 
+  color: var(--primary); 
+  background-color: var(--info-bg);
+  border-color: var(--primary); 
+}
+
 .action-btn.delete {
-  color: #ef4444;
-  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  background-color: var(--danger-bg);
+  border-color: var(--danger);
 }
 
 .action-btn.delete:hover {
-  background-color: #ef4444;
-  color: white;
+  background-color: var(--danger);
+  color: var(--text-on-primary);
 }
 
 /* Sorting & Pagination enhancements */

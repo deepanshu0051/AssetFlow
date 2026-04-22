@@ -5,16 +5,28 @@
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
   --bg-sidebar: #ffffff;
+  --bg-surface: #f1f5f9;
   --text-main: #0f172a;
+  --text-secondary: #475569;
   --text-muted: #64748b;
+  --text-on-primary: #ffffff;
   --border-color: #e2e8f0;
   --accent-color: #f1f5f9;
+  --placeholder-color: #94a3b8;
   
-  /* Status Colors */
-  --status-instock: #0ea5e9;
-  --status-installed: #10b981;
-  --status-sold: #6366f1;
-  --status-maintenance: #f59e0b;
+  /* Status & Semantic Colors - Light */
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --info: #3b82f6;
+  --info-bg: rgba(59, 130, 246, 0.1);
+
+  /* Scrollbar - Light */
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-track: #f1f5f9;
   
   /* Spacing & Borders */
   --sidebar-width: 260px;
@@ -23,7 +35,7 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   
-  /* Shadows */
+  /* Shadows - Light */
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -34,14 +46,27 @@
 }
 
 /* Dark Mode Overrides */
-.dark-theme {
+[data-theme="dark"] {
   --bg-main: #020617;
   --bg-card: #0f172a;
   --bg-sidebar: #0f172a;
+  --bg-surface: #1e293b;
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --border-color: #1e293b;
   --accent-color: #1e293b;
+  --placeholder-color: #475569;
+
+  /* Status & Semantic Colors - Dark */
+  --success-bg: rgba(16, 185, 129, 0.2);
+  --danger-bg: rgba(239, 68, 68, 0.2);
+  --warning-bg: rgba(245, 158, 11, 0.2);
+  --info-bg: rgba(59, 130, 246, 0.2);
+
+  /* Scrollbar - Dark */
+  --scrollbar-thumb: #334155;
+  --scrollbar-track: #0f172a;
   
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);

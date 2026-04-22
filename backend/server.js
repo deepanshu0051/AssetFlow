@@ -3,7 +3,6 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-// Security: custom deepSanitize is used for mongo sanitize and xss protection
 const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
@@ -13,8 +12,8 @@ const { requestLogger: logger } = require('./middleware/logger');
 dotenv.config({ path: '../.env' });
 
 const machineRoutes = require('./routes/machineRoutes');
-const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
+const plantRoutes = require('./routes/plantRoutes');
 
 const app = express();
 
@@ -25,7 +24,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
       callback(null, true);
@@ -54,20 +52,19 @@ app.use((req, res, next) => {
   if (req.body) mongoSanitize.sanitize(req.body);
   if (req.params) mongoSanitize.sanitize(req.params);
   if (req.headers) mongoSanitize.sanitize(req.headers);
-  // Skip req.query as it's a read-only getter in Express 5
   next();
 });
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 10 * 60 * 1000,
+  max: 100
 });
 app.use('/api', limiter);
 
-// Strict rate limiting for auth routes (Task 1)
+// Strict rate limiting for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 mins
+  windowMs: 15 * 60 * 1000,
   max: 5,
   message: {
     success: false,
@@ -79,8 +76,8 @@ app.use('/api/auth/forgotpassword', authLimiter);
 
 // Mount routes
 app.use('/api/machines', machineRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/plants', plantRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'Database Connected Successfully' });
@@ -93,21 +90,33 @@ app.get('/api', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// Seed default plants if they don't exist
+const seedPlants = async () => {
+  const Plant = require('./models/Plant');
+  const plantNames = ['Noida', 'Delhi', 'Greater Noida', 'Mumbai'];
+  
+  for (const plantName of plantNames) {
+    const exists = await Plant.findOne({ plantName });
+    if (!exists) {
+      await Plant.create({ plantName, machines: [] });
+      console.log(`  → Seeded plant: ${plantName}`);
+    }
+  }
+};
+
 // Connect to database and start server
 const startServer = async () => {
   try {
     await connectDB();
-    
-    // Enforce 3-collection rule and auto-migrate legacy documents safely
-    const enforceDatabaseStructure = require('./utils/enforceDatabase');
-    await enforceDatabaseStructure();
+    await seedPlants();
     
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    const { logger } = require('./middleware/logger');
-    logger.error(`Failed to start server: ${error.message}`);
+    const { logger: winstonLogger } = require('./middleware/logger');
+    winstonLogger.error(`Failed to start server: ${error.message}`);
     process.exit(1);
   }
 };

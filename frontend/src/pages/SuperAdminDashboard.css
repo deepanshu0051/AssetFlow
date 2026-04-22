@@ -1,0 +1,77 @@
+.super-admin-dashboard {
+  padding-bottom: 40px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.dashboard-content.section {
+  margin-top: 32px;
+}
+
+.dashboard-content .section-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.search-bar-wrapper {
+  position: relative;
+  width: 300px;
+}
+
+.search-bar-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.search-bar-wrapper input {
+  width: 100%;
+  padding: 10px 10px 10px 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  transition: all var(--transition-fast);
+}
+
+.search-bar-wrapper input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-bg);
+}
+
+.tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.table-wrapper h4 {
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.super-admin-dashboard .card {
+  transition: transform 0.2s;
+}
+
+.super-admin-dashboard .card:hover {
+  transform: translateY(-5px);
+}

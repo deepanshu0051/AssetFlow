@@ -76,7 +76,7 @@
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 2.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* subtle soft shadow */
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   max-width: 600px; /* Keep content medium and readable */
   margin-bottom: 2rem;
@@ -203,7 +203,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #cbd5e1;
+  background-color: var(--border-color);
   transition: .4s;
 }
 

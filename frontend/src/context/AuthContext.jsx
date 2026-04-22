@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }) => {
     validateToken();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, role) => {
     try {
-      const res = await api.login({ email, password });
+      const res = await api.login({ email, password, role });
       if (res.success) {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));

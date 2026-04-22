@@ -1,12 +1,6 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const dns = require('dns');
 
-try {
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-} catch (e) {
-  // Silent or log to winston if exported
-}
 
 let mongoServer;
 

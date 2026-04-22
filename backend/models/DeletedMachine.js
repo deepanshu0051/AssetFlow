@@ -1,27 +1,54 @@
 const mongoose = require('mongoose');
 
 const DeletedMachineSchema = new mongoose.Schema({
-  originalId: {
-    type: mongoose.Schema.Types.ObjectId,
+  machineName: {
+    type: String,
     required: true
   },
-  machineName: String,
-
-  plantName: String,
-  serialNumber: String,
-  purchaseDate: Date,
-  cost: Number,
-  gstPercentage: Number,
-  gstAmount: Number,
-  status: String,
-  description: String,
+  serialNumber: {
+    type: String,
+    required: true
+  },
+  plantName: {
+    type: String,
+    required: true
+  },
+  purchaseDate: {
+    type: Date,
+    required: true
+  },
+  cost: {
+    type: Number,
+    required: true
+  },
+  gstPercentage: {
+    type: Number,
+    required: true
+  },
+  gstAmount: {
+    type: Number,
+    required: true
+  },
+  description: {
+    type: String
+  },
+  createdBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Admin'
+  },
   deletedAt: {
     type: Date,
     default: Date.now
   },
   deletedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    type: mongoose.Schema.ObjectId,
+    refPath: 'deleterModel',
+    required: true
+  },
+  deleterModel: {
+    type: String,
+    required: true,
+    enum: ['Admin', 'SuperAdmin']
   }
 }, {
   timestamps: true,

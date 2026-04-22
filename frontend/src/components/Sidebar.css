@@ -78,7 +78,7 @@
 }
 
 .nav-link.active {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--info-bg);
   color: var(--primary);
 }
 
@@ -108,8 +108,8 @@
 }
 
 .logout-btn:hover {
-  background-color: var(--accent-color);
-  color: #ef4444;
+  background-color: var(--danger-bg);
+  color: var(--danger);
 }
 
 .avatar {

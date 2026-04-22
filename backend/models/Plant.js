@@ -6,16 +6,11 @@ const MachineSchema = new mongoose.Schema({
     required: [true, 'Please add a machine name'],
     trim: true
   },
-
-  plantName: {
-    type: String,
-    required: [true, 'Please add a plant name'],
-    trim: true
-  },
   serialNumber: {
     type: String,
     required: [true, 'Please add a serial number'],
     unique: true,
+    sparse: true,
     trim: true
   },
   purchaseDate: {
@@ -35,22 +30,41 @@ const MachineSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  status: {
-    type: String,
-    enum: ['In Stock', 'Installed'],
-    default: 'In Stock'
-  },
   description: {
     type: String,
     trim: true
   },
-  user: {
+  createdBy: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User',
+    ref: 'Admin',
     required: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Machine', MachineSchema);
+const PlantSchema = new mongoose.Schema({
+  plantName: {
+    type: String,
+    required: [true, 'Please specify plant name'],
+    unique: true,
+    enum: ['Noida', 'Delhi', 'Greater Noida', 'Mumbai']
+  },
+  machines: [MachineSchema]
+}, {
+  timestamps: true,
+  collection: 'plants'
+});
+
+// Calculate GST Amount before saving a plant (if machines updated)
+PlantSchema.pre('save', function() {
+  if (this.machines && this.machines.length > 0) {
+    this.machines.forEach(machine => {
+      if (machine.cost && machine.gstPercentage) {
+        machine.gstAmount = (machine.cost * machine.gstPercentage) / 100;
+      }
+    });
+  }
+});
+
+module.exports = mongoose.model('Plant', PlantSchema);

@@ -4,28 +4,32 @@ import { ArrowLeft, Save } from 'lucide-react';
 import Header from '../components/Header';
 import FormInput from '../components/FormInput';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import './AddMachine.css';
 
 const AddMachine = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
+  const [plants, setPlants] = useState([]);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
   const { addToast } = useToast();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     machineName: '',
     serialNumber: '',
-    plantName: '',
-
+    plantName: user?.plantLocation || '',
     purchaseDate: '',
     cost: '',
     gstPercentage: '18',
-    status: 'In Stock',
     description: ''
   });
+
+  const isSuperAdmin = user?.role === 'superadmin';
 
   useEffect(() => {
     if (isEdit) {
@@ -39,11 +43,9 @@ const AddMachine = () => {
               machineName: m.machineName,
               serialNumber: m.serialNumber,
               plantName: m.plantName,
-
               purchaseDate: new Date(m.purchaseDate).toISOString().split('T')[0],
               cost: m.cost.toString(),
               gstPercentage: m.gstPercentage.toString(),
-              status: m.status,
               description: m.description || ''
             });
           }
@@ -54,26 +56,31 @@ const AddMachine = () => {
         }
       };
       fetchMachine();
+    } else if (!isSuperAdmin && user?.plantLocation) {
+        // Ensure Admin's plant is set
+        setFormData(prev => ({ ...prev, plantName: user.plantLocation }));
     }
-  }, [id, isEdit]);
+    if (isSuperAdmin) {
+      const fetchPlants = async () => {
+        try {
+          const res = await api.getPlants();
+          if (res.success) setPlants(res.data);
+        } catch (err) {
+          console.error("Failed to fetch plants");
+        }
+      };
+      fetchPlants();
+    }
+  }, [id, isEdit, isSuperAdmin, user]);
 
   const validateField = (name, value) => {
     let error = '';
     const trimmedValue = value ? value.toString().trim() : '';
 
-    // Required check
     if (!trimmedValue && name !== 'description') {
       return 'This field is required';
     }
 
-    // Text only validation (Letters and spaces)
-    if (['machineName', 'plantName'].includes(name)) {
-      if (!/^[A-Za-z\s]+$/.test(trimmedValue)) {
-        error = 'Only letters are allowed';
-      }
-    }
-
-    // Number validation
     if (name === 'cost') {
       if (!/^\d+(\.\d+)?$/.test(trimmedValue)) {
         error = 'Only numbers are allowed';
@@ -82,11 +89,10 @@ const AddMachine = () => {
       }
     }
 
-    // Date validation (No future dates)
     if (name === 'purchaseDate') {
       const selectedDate = new Date(trimmedValue);
       const today = new Date();
-      today.setHours(23, 59, 59, 999); // Allow today
+      today.setHours(23, 59, 59, 999);
       if (selectedDate > today) {
         error = 'Future date is not allowed';
       }
@@ -97,14 +103,7 @@ const AddMachine = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Update data
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear global error
-    if (error) setError(null);
-
-    // Validate field in real-time
     const fieldError = validateField(name, value);
     setErrors(prev => ({ ...prev, [name]: fieldError }));
   };
@@ -135,7 +134,6 @@ const AddMachine = () => {
 
     try {
       setLoading(true);
-      setError(null);
       
       const payload = {
         machineName: formData.machineName.trim(),
@@ -144,21 +142,23 @@ const AddMachine = () => {
         purchaseDate: formData.purchaseDate,
         cost: parseFloat(formData.cost),
         gstPercentage: parseInt(formData.gstPercentage),
-        status: formData.status,
         description: (formData.description || '').trim()
       };
 
-      const response = isEdit 
-        ? await api.updateMachine(id, payload)
-        : await api.createMachine(payload);
+      let response;
+      if (isEdit) {
+        response = await api.updateMachine(id, payload);
+      } else {
+        // Direct creation for both (as per the "Clean Rebuild" direct createdByAdmin req)
+        response = await api.createMachine(payload);
+      }
         
       if (response.success) {
-        addToast(`Machine ${isEdit ? 'updated' : 'added'} successfully!`, 'success');
+        addToast(isEdit ? 'Machine updated successfully!' : 'Machine added successfully!', 'success');
         navigate('/machines');
       }
     } catch (err) {
       addToast(err.message || 'Failed to save machine', 'error');
-      setError(err.message || 'Failed to save machine');
     } finally {
       setLoading(false);
     }
@@ -168,7 +168,7 @@ const AddMachine = () => {
     <div className="add-machine-page">
       <Header title={isEdit ? 'Edit Machine' : 'Add New Machine'} />
 
-      <div className="page-header" style={{ marginBottom: '24px' }}>
+      <div className="page-header">
         <button className="back-btn flex items-center gap-2" onClick={() => navigate('/machines')}>
           <ArrowLeft size={18} />
           <span>Back to Machines</span>
@@ -199,9 +199,11 @@ const AddMachine = () => {
             <FormInput
               label="Plant Name"
               name="plantName"
-              placeholder="e.g. Delhi Industrial Plant"
+              type={isSuperAdmin ? 'select' : 'text'}
+              options={isSuperAdmin ? (plants.length > 0 ? plants : ['Loading...']) : []}
               value={formData.plantName}
               onChange={handleChange}
+              readOnly={!isSuperAdmin}
               required
               error={errors.plantName}
             />
@@ -235,16 +237,7 @@ const AddMachine = () => {
               required
               error={errors.gstPercentage}
             />
-            <FormInput
-              label="Status"
-              name="status"
-              type="select"
-              options={['In Stock', 'Installed']}
-              value={formData.status}
-              onChange={handleChange}
-              required
-              error={errors.status}
-            />
+            
             <div className="full-width">
               <FormInput
                 label="Description"
@@ -258,7 +251,7 @@ const AddMachine = () => {
             </div>
           </div>
 
-          <div className="form-actions flex justify-end gap-4" style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-color)' }}>
+          <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={() => navigate('/machines')} disabled={loading}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
               <Save size={18} />
@@ -268,46 +261,7 @@ const AddMachine = () => {
         </form>
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 0 24px;
-        }
-        
-        .full-width {
-          grid-column: span 2;
-        }
-        
-        .back-btn {
-          color: var(--text-muted);
-          font-weight: 500;
-          font-size: 0.9rem;
-        }
-        
-        .back-btn:hover {
-          color: var(--primary);
-        }
-        
-        .btn-secondary {
-          background-color: #f1f5f9;
-          color: var(--text-main);
-        }
-        
-        .btn-secondary:hover {
-          background-color: #e2e8f0;
-        }
 
-        @media (max-width: 768px) {
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-          .full-width {
-            grid-column: span 1;
-          }
-        }
-      `}} />
     </div>
   );
 };

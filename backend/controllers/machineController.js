@@ -1,151 +1,241 @@
-const Machine = require('../models/Machine');
+const Plant = require('../models/Plant');
 const DeletedMachine = require('../models/DeletedMachine');
 const asyncHandler = require('../middleware/asyncHandler');
 
-// @desc    Get all machines
+// @desc    Get all machines (Plant-wise filtering)
 // @route   GET /api/machines
-// @access  Public
+// @access  Private
 exports.getMachines = asyncHandler(async (req, res, next) => {
-  const machines = await Machine.find();
-  
+  let plants;
+
+  if (req.user.role === 'superadmin') {
+    // SuperAdmin sees everything
+    plants = await Plant.find().populate('machines.createdBy', 'name email');
+  } else {
+    // Admin only sees their plant
+    plants = await Plant.find({ plantName: req.user.plantLocation }).populate('machines.createdBy', 'name email');
+  }
+
+  // Flatten machines for the frontend data table if needed, or return grouped by plant
+  let allMachines = [];
+  plants.forEach(p => {
+    const pMachines = p.machines.map(m => ({
+      ...m.toObject(),
+      plantName: p.plantName,
+      plantId: p._id
+    }));
+    allMachines = [...allMachines, ...pMachines];
+  });
+
   res.status(200).json({
     success: true,
     message: 'Machines fetched successfully',
-    data: machines
+    count: allMachines.length,
+    data: allMachines,
+    groupedData: plants // Optional: if frontend wants nested structure
   });
 });
 
 // @desc    Get single machine
 // @route   GET /api/machines/:id
-// @access  Public
+// @access  Private
 exports.getMachine = asyncHandler(async (req, res, next) => {
-  const machine = await Machine.findById(req.params.id);
+  // We have to find the plant first, then the machine inside it
+  const plant = await Plant.findOne({
+    'machines._id': req.params.id
+  });
 
-  if (!machine) {
+  if (!plant) {
     return res.status(404).json({
       success: false,
-      message: `Machine not found with id of ${req.params.id}`,
-      data: null
+      message: 'Machine not found'
+    });
+  }
+
+  const machine = plant.machines.id(req.params.id);
+
+  // Authorization check
+  if (req.user.role !== 'superadmin' && plant.plantName !== req.user.plantLocation) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to view machines from this plant'
     });
   }
 
   res.status(200).json({
     success: true,
-    message: 'Machine fetched successfully',
-    data: machine
+    data: {
+      ...machine.toObject(),
+      plantName: plant.plantName
+    }
   });
 });
 
-// Helper for Machine Validation
-const validateMachineData = (data) => {
-  const { machineName, plantName, purchaseDate, cost, serialNumber } = data;
-  const errors = [];
-
-  if (!machineName || !machineName.trim()) errors.push('Machine Name is required');
-  else if (!/^[A-Za-z\s]+$/.test(machineName.trim())) errors.push('Machine Name: Only letters are allowed');
-
-  if (!plantName || !plantName.trim()) errors.push('Plant Name is required');
-  else if (!/^[A-Za-z\s]+$/.test(plantName.trim())) errors.push('Plant Name: Only letters are allowed');
-
-  if (!serialNumber || !serialNumber.trim()) errors.push('Serial Number is required');
-
-  if (!purchaseDate) errors.push('Purchase Date is required');
-  else {
-    const selectedDate = new Date(purchaseDate);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    if (selectedDate > today) errors.push('Future date is not allowed for Purchase Date');
-  }
-
-  if (cost === undefined || cost === '') errors.push('Cost is required');
-  else if (isNaN(cost)) errors.push('Cost: Only numbers are allowed');
-  else if (parseFloat(cost) <= 0) errors.push('Cost must be a positive number');
-
-  return errors;
-};
-
-// @desc    Create new machine
+// @desc    Create new machine (Embedded in Plant)
 // @route   POST /api/machines
-// @access  Public
+// @access  Private (Admin/SuperAdmin)
 exports.createMachine = asyncHandler(async (req, res, next) => {
-  // Trim fields
-  if (req.body.machineName) req.body.machineName = req.body.machineName.trim();
-  if (req.body.plantName) req.body.plantName = req.body.plantName.trim();
-  if (req.body.serialNumber) req.body.serialNumber = req.body.serialNumber.trim();
-  if (req.body.description) req.body.description = req.body.description.trim();
+  const { machineName, serialNumber, purchaseDate, cost, gstPercentage, description } = req.body;
+  const plantLocation = req.user.role === 'superadmin' ? req.body.plantName : req.user.plantLocation;
 
-  // Validate
-  const validationErrors = validateMachineData(req.body);
-  if (validationErrors.length > 0) {
+  if (!plantLocation) {
     return res.status(400).json({
       success: false,
-      message: validationErrors[0], // Return the first error as per requirements
-      errors: validationErrors
+      message: 'Plant location is required'
     });
   }
 
-  const { cost, gstPercentage } = req.body;
-  if (cost && gstPercentage) {
-    req.body.gstAmount = (parseFloat(cost) * parseFloat(gstPercentage)) / 100;
+  const plant = await Plant.findOne({ plantName: plantLocation });
+
+  if (!plant) {
+    return res.status(404).json({
+      success: false,
+      message: `Plant ${plantLocation} does not exist in the system`
+    });
   }
 
-  const machine = await Machine.create(req.body);
+  // Create machine object
+  const newMachine = {
+    machineName,
+    serialNumber,
+    purchaseDate,
+    cost,
+    gstPercentage,
+    description,
+    createdBy: req.user.id
+  };
+
+  plant.machines.push(newMachine);
+  await plant.save();
 
   res.status(201).json({
     success: true,
-    message: 'Machine created successfully',
-    data: machine
+    message: 'Machine added to plant successfully',
+    data: plant.machines[plant.machines.length - 1]
   });
 });
 
-// @desc    Update machine
-// @route   PUT /api/machines/:id
-// @access  Public
-exports.updateMachine = asyncHandler(async (req, res, next) => {
-  // Trim fields
-  if (req.body.machineName) req.body.machineName = req.body.machineName.trim();
-  if (req.body.plantName) req.body.plantName = req.body.plantName.trim();
-  if (req.body.serialNumber) req.body.serialNumber = req.body.serialNumber.trim();
-  if (req.body.description) req.body.description = req.body.description.trim();
+// @desc    Delete machine (Move to DeletedMachines)
+// @route   DELETE /api/machines/:id
+// @access  Private
+exports.deleteMachine = asyncHandler(async (req, res, next) => {
+  const plant = await Plant.findOne({ 'machines._id': req.params.id });
 
-  // Validate if fields are provided (partial update supported but we check if provided)
-  const validationErrors = validateMachineData({ ...req.body, purchaseDate: req.body.purchaseDate || '2000-01-01' }); // Minimal mock for purchaseDate if not provided in partial update
-  // Actually, we should probably check if the fields that are present are valid.
-  // But since the frontend sends everything, let's keep it simple.
-  
-  if (validationErrors.length > 0) {
-    // Only check fields that are actually in req.body for PUT if it was partial, 
-    // but here it's expected to be full data from frontend.
-    // Let's refine the validation call to only check what's sent.
-  }
-
-  // Simplified: Since we know the frontend sends the whole form, let's just validate it all.
-  const finalValidationErrors = validateMachineData(req.body);
-  if (finalValidationErrors.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: finalValidationErrors[0],
-      errors: finalValidationErrors
-    });
-  }
-
-  const { cost, gstPercentage } = req.body;
-  if (cost !== undefined && gstPercentage !== undefined) {
-    req.body.gstAmount = (parseFloat(cost) * parseFloat(gstPercentage)) / 100;
-  }
-
-  const machine = await Machine.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!machine) {
+  if (!plant) {
     return res.status(404).json({
       success: false,
-      message: `Machine not found with id of ${req.params.id}`,
-      data: null
+      message: 'Machine not found'
     });
   }
+
+  // Auth check
+  if (req.user.role !== 'superadmin' && plant.plantName !== req.user.plantLocation) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to delete machines from this plant'
+    });
+  }
+
+  const machine = plant.machines.id(req.params.id);
+  
+  // Create Deleted record
+  await DeletedMachine.create({
+    machineName: machine.machineName,
+    serialNumber: machine.serialNumber,
+    plantName: plant.plantName,
+    purchaseDate: machine.purchaseDate,
+    cost: machine.cost,
+    gstPercentage: machine.gstPercentage,
+    gstAmount: machine.gstAmount,
+    description: machine.description,
+    createdBy: machine.createdBy,
+    deletedBy: req.user.id,
+    deleterModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin'
+  });
+
+  // Remove from plant
+  machine.remove();
+  await plant.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Machine moved to DeletedMachines successfully'
+  });
+});
+
+// @desc    Update single machine
+// @route   PUT /api/machines/:id
+// @access  Private
+exports.updateMachine = asyncHandler(async (req, res, next) => {
+  const { machineName, serialNumber, purchaseDate, cost, gstPercentage, description, plantName } = req.body;
+  
+  let plant = await Plant.findOne({ 'machines._id': req.params.id });
+
+  if (!plant) {
+    return res.status(404).json({
+      success: false,
+      message: 'Machine not found'
+    });
+  }
+
+  // Auth check
+  if (req.user.role !== 'superadmin' && plant.plantName !== req.user.plantLocation) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to edit machines in this plant'
+    });
+  }
+
+  let machine = plant.machines.id(req.params.id);
+
+  // Check if plantName is being changed (SuperAdmin only)
+  if (req.user.role === 'superadmin' && plantName && plantName !== plant.plantName) {
+    const newPlant = await Plant.findOne({ plantName });
+    if (!newPlant) {
+      return res.status(404).json({
+        success: false,
+        message: `Plant ${plantName} not found`
+      });
+    }
+
+    // Copy machine with updated fields
+    const updatedMachine = {
+      ...machine.toObject(),
+      machineName: machineName || machine.machineName,
+      serialNumber: serialNumber || machine.serialNumber,
+      purchaseDate: purchaseDate || machine.purchaseDate,
+      cost: cost || machine.cost,
+      gstPercentage: gstPercentage || machine.gstPercentage,
+      description: description !== undefined ? description : machine.description,
+    };
+
+    // Remove _id so mongoose generates a new one safely, or keep it if allowed.
+    // Keeping the original _id is generally safe for subdocuments, but usually better to delete if we face duplicate issues.
+    delete updatedMachine._id;
+    
+    newPlant.machines.push(updatedMachine);
+    await newPlant.save();
+
+    // Remove from old plant
+    machine.remove();
+    await plant.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Machine moved and updated successfully',
+      data: newPlant.machines[newPlant.machines.length - 1]
+    });
+  }
+
+  // Same plant update
+  if (machineName) machine.machineName = machineName;
+  if (serialNumber) machine.serialNumber = serialNumber;
+  if (purchaseDate) machine.purchaseDate = purchaseDate;
+  if (cost) machine.cost = cost;
+  if (gstPercentage) machine.gstPercentage = gstPercentage;
+  if (description !== undefined) machine.description = description;
+
+  await plant.save();
 
   res.status(200).json({
     success: true,
@@ -154,43 +244,3 @@ exports.updateMachine = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Delete machine
-// @route   DELETE /api/machines/:id
-// @access  Public
-exports.deleteMachine = asyncHandler(async (req, res, next) => {
-  const machine = await Machine.findById(req.params.id);
-
-  if (!machine) {
-    return res.status(404).json({
-      success: false,
-      message: `Machine not found with id of ${req.params.id}`,
-      data: null
-    });
-  }
-
-  const machineName = machine.machineName;
-
-  // Create DeletedMachine record (Soft Delete)
-  await DeletedMachine.create({
-    originalId: machine._id,
-    machineName: machine.machineName,
-
-    plantName: machine.plantName,
-    serialNumber: machine.serialNumber,
-    purchaseDate: machine.purchaseDate,
-    cost: machine.cost,
-    gstPercentage: machine.gstPercentage,
-    gstAmount: machine.gstAmount,
-    status: machine.status,
-    description: machine.description,
-    deletedBy: req.user.id
-  });
-
-  await machine.deleteOne();
-
-  res.status(200).json({
-    success: true,
-    message: 'Machine deleted successfully',
-    data: null
-  });
-});

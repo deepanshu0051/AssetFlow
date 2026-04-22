@@ -14,7 +14,9 @@ const sendTokenResponse = (user, statusCode, res) => {
     user: {
       id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role,
+      plantLocation: user.plantLocation // Will be undefined for SuperAdmin, which is fine
     }
   });
 };

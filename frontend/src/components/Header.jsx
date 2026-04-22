@@ -3,8 +3,9 @@ import { Search, User, LogOut, Settings as SettingsIcon, User as UserIcon } from
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
-import apiService from '../services/api';
+import ThemeToggle from './ThemeToggle';
 import './Header.css';
+
 
 const Header = ({ title }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -53,6 +54,7 @@ const Header = ({ title }) => {
         </div>
         
         <div className="header-actions">
+          <ThemeToggle />
           <div className="header-divider"></div>
           
           <div className="dropdown-wrapper" ref={userMenuRef}>

@@ -12,8 +12,9 @@ exports.machineValidation = [
   body('plantName')
     .notEmpty()
     .withMessage('Plant name is required')
+    .isIn(['Noida', 'Delhi', 'Greater Noida', 'Mumbai'])
+    .withMessage('Plant must be one of: Noida, Delhi, Greater Noida, Mumbai')
     .trim(),
-
   body('purchaseDate')
     .notEmpty()
     .withMessage('Purchase date is required')
@@ -27,9 +28,5 @@ exports.machineValidation = [
   body('gstPercentage')
     .optional()
     .isNumeric()
-    .withMessage('GST percentage must be a number'),
-  body('status')
-    .optional()
-    .isIn(['In Stock', 'Installed'])
-    .withMessage('Invalid status value')
+    .withMessage('GST percentage must be a number')
 ];

@@ -57,13 +57,13 @@
 }
 
 .trend.up {
-  color: #10b981;
-  background-color: #ecfdf5;
+  color: var(--success);
+  background-color: var(--success-bg);
 }
 
 .trend.down {
-  color: #ef4444;
-  background-color: #fef2f2;
+  color: var(--danger);
+  background-color: var(--danger-bg);
 }
 
 .trend-text {

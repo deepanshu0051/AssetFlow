@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('./asyncHandler');
-const User = require('../models/User');
+const SuperAdmin = require('../models/SuperAdmin');
+const Admin = require('../models/Admin');
 
 // Protect routes
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -26,8 +27,20 @@ exports.protect = asyncHandler(async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id);
+    // Try finding in both collections
+    let user = await SuperAdmin.findById(decoded.id);
+    if (!user) {
+      user = await Admin.findById(decoded.id);
+    }
 
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this route'
+      });
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     return res.status(401).json({
@@ -37,3 +50,15 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Grant access to specific roles
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `User role ${req.user.role} is not authorized to access this route`
+      });
+    }
+    next();
+  };
+};

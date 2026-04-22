@@ -31,7 +31,7 @@ const Sidebar = () => {
     {
       title: 'Main',
       items: [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+        { name: 'Dashboard', icon: LayoutDashboard, path: user?.role === 'superadmin' ? '/superadmin/dashboard' : '/admin/dashboard' },
         { name: 'Profile', icon: User, path: '/profile' },
       ]
     },

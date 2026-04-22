@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useSearch } from '../context/SearchContext';
 import DataTable from '../components/DataTable';
-import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
@@ -15,7 +14,7 @@ const Machines = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { searchTerm } = useSearch();
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [plantFilter, setPlantFilter] = useState('All');
   const { addToast } = useToast();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [machineToDelete, setMachineToDelete] = useState(null);
@@ -47,7 +46,7 @@ const Machines = () => {
     try {
       const response = await api.deleteMachine(machineToDelete);
       if (response.success) {
-        addToast('Machine deleted successfully', 'success');
+        addToast('Machine moved to Deleted Machines', 'success');
         fetchMachines();
       }
     } catch (err) {
@@ -62,29 +61,20 @@ const Machines = () => {
     const name = m.machineName || '';
     const serial = m.serialNumber || '';
     const plantName = m.plantName || '';
-    const status = m.status || '';
     
     const term = (searchTerm || '').toLowerCase().trim();
     const matchesSearch = name.toLowerCase().includes(term) || 
                           serial.toLowerCase().includes(term) ||
-                          plantName.toLowerCase().includes(term) ||
-                          status.toLowerCase().includes(term);
+                          plantName.toLowerCase().includes(term);
                           
-    const matchesStatus = statusFilter === 'All' || m.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesPlant = plantFilter === 'All' || m.plantName === plantFilter;
+    return matchesSearch && matchesPlant;
   });
 
   const columns = [
     { key: 'machineName', header: 'Machine Name', sortable: true },
-
-    { key: 'plantName', header: 'Plant Name', sortable: true },
+    { key: 'plantName', header: 'Plant', sortable: true },
     { key: 'serialNumber', header: 'Serial Number', sortable: true },
-    { 
-      key: 'status', 
-      header: 'Status',
-      sortable: true,
-      render: (item) => <StatusBadge status={item.status} />
-    },
     { 
       key: 'purchaseDate', 
       header: 'Purchase Date', 
@@ -112,11 +102,10 @@ const Machines = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      width: '180px',
+      width: '120px',
       render: (item) => (
         <div className="flex gap-2">
           <button className="action-btn view" onClick={() => navigate(`/machines/${item._id}`)}>View</button>
-          <button className="action-btn edit" onClick={() => navigate(`/machines/edit/${item._id}`)}>Edit</button>
           <button className="action-btn delete" onClick={() => confirmDelete(item._id)}>Delete</button>
         </div>
       )
@@ -131,12 +120,14 @@ const Machines = () => {
         <div className="filters flex gap-4">
           <select 
             className="form-control w-48"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={plantFilter}
+            onChange={(e) => setPlantFilter(e.target.value)}
           >
-            <option value="All">All Status</option>
-            <option value="In Stock">In Stock</option>
-            <option value="Installed">Installed</option>
+            <option value="All">All Plants</option>
+            <option value="Noida">Noida</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Greater Noida">Greater Noida</option>
+            <option value="Mumbai">Mumbai</option>
           </select>
         </div>
         
@@ -147,11 +138,11 @@ const Machines = () => {
       </div>
       
       {loading ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-50">
           <p>Loading machines...</p>
         </div>
       ) : error ? (
-        <div className="flex justify-center items-center h-64 text-muted">
+        <div className="flex justify-center items-center h-50 text-muted">
           <p>{error}</p>
         </div>
       ) : (
@@ -166,7 +157,7 @@ const Machines = () => {
       <ConfirmModal
         isOpen={deleteModalOpen}
         title="Delete Machine"
-        message="Are you sure you want to delete this machine? This action cannot be undone."
+        message="Are you sure you want to delete this machine? It will be moved to Deleted Machines."
         onConfirm={executeDelete}
         onCancel={() => {
           setDeleteModalOpen(false);

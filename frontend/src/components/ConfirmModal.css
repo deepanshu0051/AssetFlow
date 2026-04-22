@@ -62,11 +62,11 @@
   margin-bottom: 20px;
 }
 
-.modal-icon-container.danger { background-color: rgba(239, 68, 68, 0.1); }
-.modal-icon.danger { color: #ef4444; }
+.modal-icon-container.danger { background-color: var(--danger-bg); }
+.modal-icon.danger { color: var(--danger); }
 
-.modal-icon-container.warning { background-color: rgba(245, 158, 11, 0.1); }
-.modal-icon.warning { color: #f59e0b; }
+.modal-icon-container.warning { background-color: var(--warning-bg); }
+.modal-icon.warning { color: var(--warning); }
 
 .modal-title {
   margin: 0 0 12px 0;
@@ -103,12 +103,13 @@
 }
 
 .btn-danger {
-  background-color: #ef4444;
-  color: white;
+  background-color: var(--danger);
+  color: var(--text-on-primary);
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: var(--danger);
+  filter: brightness(0.9);
 }
 
 @keyframes modalPopIn {

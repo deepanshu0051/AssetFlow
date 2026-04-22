@@ -4,6 +4,7 @@ import { ArrowLeft, Edit, Trash2, Cpu, Calendar, ShieldCheck, MapPin, Tag, Landm
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
 import api from '../services/api';
+import './MachineDetails.css';
 
 const MachineDetails = () => {
   const { id } = useParams();
@@ -43,9 +44,9 @@ const MachineDetails = () => {
     }
   };
 
-  if (loading) return <div className="p-8">Loading machine details...</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
-  if (!machine) return <div className="p-8">Machine not found.</div>;
+  if (loading) return <div className="p-8 text-main">Loading machine details...</div>;
+  if (error) return <div className="p-8 text-danger">{error}</div>;
+  if (!machine) return <div className="p-8 text-main">Machine not found.</div>;
 
   const detailGroups = [
     {
@@ -73,7 +74,7 @@ const MachineDetails = () => {
     <div className="machine-details-page">
       <Header title="Machine Details" />
       
-      <div className="page-header" style={{ marginBottom: '24px' }}>
+      <div className="page-header mb-6">
         <button className="back-btn flex items-center gap-2" onClick={() => navigate('/machines')}>
           <ArrowLeft size={18} />
           <span>Back to Machines</span>
@@ -86,11 +87,11 @@ const MachineDetails = () => {
       </div>
       
       <div className="details-container">
-        <div className="main-info card" style={{ marginBottom: '24px' }}>
+        <div className="main-info card mb-6">
           <div className="flex justify-between items-start">
             <div className="flex gap-4 items-center">
               <div className="machine-avatar">
-                <Cpu size={32} color="var(--primary)" />
+                <Cpu size={32} />
               </div>
               <div>
                 <h2 className="machine-name">{machine.machineName}</h2>
@@ -128,88 +129,6 @@ const MachineDetails = () => {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .machine-avatar {
-          width: 64px;
-          height: 64px;
-          background: #eff6ff;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .machine-name {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 4px;
-        }
-        
-        .machine-sn {
-          color: var(--text-muted);
-          font-size: 0.9rem;
-        }
-        
-        .details-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-        }
-        
-        .group-title {
-          font-size: 1rem;
-          font-weight: 700;
-          margin-bottom: 20px;
-          padding-bottom: 12px;
-          border-bottom: 1px solid var(--border-color);
-        }
-        
-        .detail-item {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 16px;
-        }
-        
-        .item-icon {
-          color: var(--text-muted);
-        }
-        
-        .item-label {
-          display: block;
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 2px;
-        }
-        
-        .item-value {
-          font-weight: 600;
-          color: var(--text-main);
-        }
-        
-        .notes-text {
-          color: var(--text-main);
-          font-size: 0.95rem;
-          line-height: 1.6;
-        }
-
-        .btn-danger {
-          background-color: #fef2f2;
-          color: #ef4444;
-          border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        
-        .btn-danger:hover {
-          background-color: #fee2e2;
-        }
-
-        @media (max-width: 768px) {
-          .details-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}} />
     </div>
   );
 };

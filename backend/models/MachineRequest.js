@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
-const MachineSchema = new mongoose.Schema({
+const MachineRequestSchema = new mongoose.Schema({
   machineName: {
     type: String,
     required: [true, 'Please add a machine name'],
     trim: true
   },
-
   plantName: {
     type: String,
     required: [true, 'Please add a plant name'],
@@ -15,7 +14,6 @@ const MachineSchema = new mongoose.Schema({
   serialNumber: {
     type: String,
     required: [true, 'Please add a serial number'],
-    unique: true,
     trim: true
   },
   purchaseDate: {
@@ -37,20 +35,31 @@ const MachineSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['In Stock', 'Installed'],
-    default: 'In Stock'
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
   },
   description: {
     type: String,
     trim: true
   },
-  user: {
+  admin: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: true
+  },
+  approvedBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+  },
+  approvedAt: {
+    type: Date
+  },
+  rejectedReason: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Machine', MachineSchema);
+module.exports = mongoose.model('MachineRequest', MachineRequestSchema);

@@ -1,9 +1,9 @@
-const crypto = require('crypto');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
-const UserSchema = new mongoose.Schema({
+const SuperAdminSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Please add a name'],
@@ -28,32 +28,20 @@ const UserSchema = new mongoose.Schema({
     ],
     select: false
   },
-  phoneNumber: {
-    type: String,
-    required: [true, 'Please add a phone number'],
-    match: [/^\+91[0-9]{10}$/, 'Phone number must be in format +91XXXXXXXXXX']
-  },
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
   role: {
     type: String,
-    enum: ['admin', 'superadmin'],
-    default: 'admin'
+    default: 'superadmin',
+    immutable: true
   },
-  plantLocation: {
-    type: String,
-    trim: true
-  },
-  department: {
-    type: String,
-    trim: true
-  }
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
 }, {
-  timestamps: true
+  timestamps: true,
+  collection: 'superadmins'
 });
 
 // Encrypt password using bcrypt
-UserSchema.pre('save', async function() {
+SuperAdminSchema.pre('save', async function() {
   if (!this.isModified('password')) {
     return;
   }
@@ -61,33 +49,24 @@ UserSchema.pre('save', async function() {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Match user entered password to hashed password in database
+SuperAdminSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
 // Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+SuperAdminSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign({ id: this._id, role: 'superadmin' }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 };
 
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
 // Generate and hash password token
-UserSchema.methods.getResetPasswordToken = function() {
-  // Generate token
+SuperAdminSchema.methods.getResetPasswordToken = function() {
   const resetToken = crypto.randomBytes(20).toString('hex');
-
-  // Hash token and set to resetPasswordToken field
-  this.resetPasswordToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
-  // Set expire
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-
+  this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
   return resetToken;
 };
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('SuperAdmin', SuperAdminSchema);

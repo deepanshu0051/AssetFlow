@@ -4,8 +4,12 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'light';
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const useSystem = localStorage.getItem('useSystemTheme') === 'true';
+    if (useSystem) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return savedTheme;
   });
   const [useSystemTheme, setUseSystemTheme] = useState(() => {
     return localStorage.getItem('useSystemTheme') === 'true';
@@ -25,12 +29,9 @@ export const ThemeProvider = ({ children }) => {
   }, [useSystemTheme]);
 
   useEffect(() => {
-    const body = document.body;
-    if (theme === 'dark') {
-      body.classList.add('dark-theme');
-    } else {
-      body.classList.remove('dark-theme');
-    }
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    
     if (!useSystemTheme) {
       localStorage.setItem('theme', theme);
     }

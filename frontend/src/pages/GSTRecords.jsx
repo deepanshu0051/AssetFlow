@@ -68,11 +68,11 @@ const GSTRecords = () => {
     <div className="gst-records-page">
       <Header title="GST Records" />
       
-      <div className="section card" style={{ marginBottom: '24px' }}>
+      <div className="section card mb-6">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Total GST Credit (Automatic)</p>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>
+            <p className="text-muted text-sm">Total GST Credit (Automatic)</p>
+            <h2 className="text-2xl font-bold">
               ₹{totalGst.toLocaleString()}
             </h2>
           </div>
@@ -84,11 +84,11 @@ const GSTRecords = () => {
       </div>
       
       {loading ? (
-        <div className="flex justify-center items-center" style={{ height: '200px' }}>
+        <div className="flex justify-center items-center h-50">
           <p>Loading records...</p>
         </div>
       ) : error ? (
-        <div className="flex justify-center items-center" style={{ height: '200px', color: 'var(--text-muted)' }}>
+        <div className="flex justify-center items-center h-50 text-muted">
           <p>{error}</p>
         </div>
       ) : (
