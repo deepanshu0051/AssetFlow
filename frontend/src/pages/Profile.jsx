@@ -34,8 +34,9 @@ const Profile = () => {
   }, [user]);
 
   const handleLogout = () => {
+    const redirectPath = user?.role === 'superadmin' ? '/superadmin/login' : '/admin/login';
     logout();
-    navigate('/login');
+    navigate(redirectPath);
   };
 
   const handleChange = (e) => {

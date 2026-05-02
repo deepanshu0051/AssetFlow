@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import './FormInput.css';
 
-const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur, options, name, required = false, error, isValid, prefix, maxLength, readOnly, showStrength, ...props }) => {
+const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur, options, name, required = false, error, isValid, prefix, maxLength, readOnly, showStrength, rightAction, ...props }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const isPassword = type === 'password';
@@ -32,7 +32,7 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur,
 
   return (
     <div className={`form-group ${error ? 'has-error' : ''}`}>
-      {label && <label className="form-label">{label}{required && <span className="required-star">*</span>}</label>}
+      {label && <label className="form-label">{label}</label>}
       
       <div className="input-with-icon">
         {type === 'select' ? (
@@ -76,10 +76,10 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur,
               required={required}
               maxLength={maxLength}
               readOnly={readOnly}
-              style={readOnly ? { backgroundColor: 'var(--bg-secondary, #f1f5f9)', cursor: 'not-allowed' } : {}}
+              style={readOnly ? { backgroundColor: 'var(--accent-color)', cursor: 'not-allowed' } : {}}
               {...props}
             />
-            {isPassword && (
+            {isPassword ? (
               <button 
                 type="button" 
                 className="password-toggle" 
@@ -88,6 +88,10 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur,
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            ) : rightAction && (
+              <div className="input-right-action">
+                {rightAction}
+              </div>
             )}
           </div>
         )}

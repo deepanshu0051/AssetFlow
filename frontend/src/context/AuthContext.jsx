@@ -56,7 +56,8 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (err) {
-      return { success: false, message: err.message || 'Login failed' };
+      const message = err.message || (typeof err === 'string' ? err : 'Login failed');
+      return { success: false, message };
     }
   };
 

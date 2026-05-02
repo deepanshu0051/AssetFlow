@@ -34,7 +34,13 @@ const SuperAdminSchema = new mongoose.Schema({
     immutable: true
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  otpCode: String,
+  otpExpire: Date,
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true,
   collection: 'superadmins'

@@ -1,9 +1,9 @@
 import React from 'react';
 import './Card.css';
 
-const Card = ({ title, value, icon: Icon, trend, trendValue, color }) => {
+const Card = ({ title, value, icon: Icon, trend, trendValue, color, variant = 'standard' }) => {
   return (
-    <div className="summary-card">
+    <div className={`summary-card ${variant}-card`}>
       <div className="card-header">
         <div className="card-info">
           <p className="card-title">{title}</p>

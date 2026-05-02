@@ -27,14 +27,17 @@ import { Navigate } from 'react-router-dom';
 // Centralized redirector for '/dashboard'
 const DashboardRedirect = () => {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/admin/login" replace />;
   return <Navigate to={user.role === 'superadmin' ? '/superadmin/dashboard' : '/admin/dashboard'} replace />;
 };
+
+import { NotificationProvider } from './context/NotificationContext';
 
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+        <NotificationProvider>
         <ToastProvider>
         <AuthProvider>
           <Router>
@@ -42,8 +45,8 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<PortalEntry />} />
-              <Route path="/super-admin-auth" element={<SuperAdminAuth />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/superadmin/login" element={<SuperAdminAuth />} />
+              <Route path="/admin/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin/forgot-password" element={<ForgotPassword role="admin" />} />
               <Route path="/superadmin/forgot-password" element={<ForgotPassword role="superadmin" />} />
@@ -78,6 +81,7 @@ function App() {
           </Router>
         </AuthProvider>
         </ToastProvider>
+        </NotificationProvider>
     </ThemeProvider>
     </ErrorBoundary>
   );

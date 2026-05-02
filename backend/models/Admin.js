@@ -38,8 +38,19 @@ const AdminSchema = new mongoose.Schema({
     required: [true, 'Please specify plant location'],
     enum: ['Noida', 'Delhi', 'Greater Noida', 'Mumbai']
   },
+  mobileNumber: {
+    type: String,
+    required: [true, 'Please add a mobile number'],
+    match: [/^\d{10}$/, 'Mobile number must be exactly 10 digits']
+  },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  otpCode: String,
+  otpExpire: Date,
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true,
   collection: 'admins'

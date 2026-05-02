@@ -24,8 +24,9 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     clearSearchTerm();
+    const redirectPath = user?.role === 'superadmin' ? '/superadmin/login' : '/admin/login';
     logout();
-    navigate('/login');
+    navigate(redirectPath);
   };
   const menuGroups = [
     {

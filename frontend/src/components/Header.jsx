@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 import './Header.css';
 
 
@@ -29,16 +30,19 @@ const Header = ({ title }) => {
 
   const handleLogout = () => {
     updateSearchTerm('');
+    const redirectPath = user?.role === 'superadmin' ? '/superadmin/login' : '/admin/login';
     logout();
-    navigate('/login');
+    navigate(redirectPath);
   };
 
   return (
     <header className="main-header">
       <div className="header-left">
-        <h2 className="header-title">
-          {title}
-        </h2>
+        <div className="header-title-container">
+          <h2 className="header-title">
+            {title}
+          </h2>
+        </div>
       </div>
       
       <div className="header-right">
@@ -54,6 +58,8 @@ const Header = ({ title }) => {
         </div>
         
         <div className="header-actions">
+          <NotificationBell />
+          <div className="header-divider"></div>
           <ThemeToggle />
           <div className="header-divider"></div>
           

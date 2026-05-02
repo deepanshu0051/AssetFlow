@@ -1,5 +1,9 @@
 @import './theme.css';
 
+html {
+  font-size: 16px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -36,7 +40,12 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   color: var(--text-main);
+  line-height: 1.2;
 }
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
 
 a {
   text-decoration: none;
@@ -76,7 +85,7 @@ button {
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -85,7 +94,7 @@ button {
   background: var(--bg-card);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  padding: 20px;
+  padding: 16px;
   border: 1px solid var(--border-color);
 }
 
@@ -101,10 +110,10 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   transition: all var(--transition-fast);
   text-decoration: none;
 }
@@ -169,6 +178,6 @@ button {
 .flex-wrap { flex-wrap: wrap; }
 .border-t { border-top: 1px solid var(--border-color); }
 .font-semibold { font-weight: 600; }
-.text-sm { font-size: 0.9rem; }
-.text-2xl { font-size: 1.75rem; font-weight: 700; }
+.text-sm { font-size: 0.825rem; }
+.text-2xl { font-size: 1.5rem; font-weight: 700; }
 

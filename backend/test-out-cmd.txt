@@ -1,0 +1,21 @@
+--- STARTING E2E API TESTS ---
+
+[Test 1] SuperAdmin Login
+Status: 200
+SUCCESS: SuperAdmin login passed
+
+[Test 2] Admin Login
+Status: 200
+SUCCESS: Admin login passed
+
+[Test 3] SuperAdmin Registration Attempt
+Status: 400
+
+[Test 4] Request OTP for Admin Registration
+Status: 200
+SUCCESS: OTP requested successfully
+
+[Test 5] Verify OTP with valid token
+Status: 400
+
+--- TESTS COMPLETED ---

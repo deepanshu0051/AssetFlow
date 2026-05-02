@@ -102,7 +102,7 @@ const ResetPassword = ({ role = 'admin' }) => {
         </form>
         
         <p className="auth-footer mt-6 text-center">
-          <Link to={loginLink}>Back to {isSuperAdmin ? 'Super Admin Auth' : 'Login'}</Link>
+          Back to <Link to={loginLink}>{isSuperAdmin ? 'Super Admin Auth' : 'Login'}</Link>
         </p>
       </div>
     </div>

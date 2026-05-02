@@ -3,11 +3,13 @@ const mongoose = require('mongoose');
 const DeletedMachineSchema = new mongoose.Schema({
   machineName: {
     type: String,
-    required: true
+    required: true,
+    match: [/^[a-zA-Z]+$/, 'Machine name can only contain letters']
   },
   serialNumber: {
     type: String,
-    required: true
+    required: true,
+    match: [/^[a-zA-Z0-9]+$/, 'Serial number can only contain letters and numbers']
   },
   plantName: {
     type: String,

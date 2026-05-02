@@ -4,7 +4,8 @@ const MachineSchema = new mongoose.Schema({
   machineName: {
     type: String,
     required: [true, 'Please add a machine name'],
-    trim: true
+    trim: true,
+    match: [/^[a-zA-Z]+$/, 'Machine name can only contain letters (no spaces or special characters)']
   },
 
   plantName: {
@@ -16,7 +17,8 @@ const MachineSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a serial number'],
     unique: true,
-    trim: true
+    trim: true,
+    match: [/^[a-zA-Z0-9]+$/, 'Serial number can only contain letters and numbers']
   },
   purchaseDate: {
     type: Date,

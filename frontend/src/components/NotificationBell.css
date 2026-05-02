@@ -1,168 +1,48 @@
-.notification-bell-wrapper {
-  position: relative;
+.notification-bell-container {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .bell-icon-container {
   position: relative;
-  padding: 8px;
-  border-radius: 50%;
+  padding: 10px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--text-muted);
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bell-icon-container:hover {
-  background-color: var(--bg-main);
+  background-color: var(--accent-color);
   color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .bell-icon-container.has-notifications {
-  color: var(--text-main);
+  color: var(--primary);
+  background-color: rgba(59, 130, 246, 0.08);
 }
 
 .notification-count {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -4px;
+  right: -4px;
   background-color: var(--danger);
   color: white;
   font-size: 10px;
-  font-weight: 700;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--bg-card);
-}
-
-.notification-dropdown {
-  position: absolute;
-  top: 120%;
-  right: 0;
-  width: 350px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  overflow: hidden;
-  animation: slideInUp 0.2s ease-out;
-}
-
-@keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.notification-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.notification-header h3 {
-  font-size: 1rem;
-  margin: 0;
-}
-
-.pending-label {
-  background-color: var(--warning-bg);
-  color: var(--warning);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-}
-
-.notification-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.notification-item {
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.2s;
-}
-
-.notification-item:hover {
-  background-color: var(--bg-main);
-}
-
-.notification-info {
-  flex: 1;
-  padding-right: 12px;
-}
-
-.req-machine-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-}
-
-.req-details {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-
-.req-serial {
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: var(--text-muted);
-}
-
-.notification-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.notification-actions button {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-approve {
-  background-color: var(--success-bg);
-  color: var(--success);
-}
-
-.btn-approve:hover:not(:disabled) {
-  background-color: var(--success);
-  color: var(--text-on-primary);
-}
-
-.btn-reject {
-  background-color: var(--danger-bg);
-  color: var(--danger);
-}
-
-.btn-reject:hover:not(:disabled) {
-  background-color: var(--danger);
-  color: var(--text-on-primary);
-}
-
-.no-notifications {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--text-muted);
-}
-
-.no-notifications p {
-  margin-top: 12px;
-  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }

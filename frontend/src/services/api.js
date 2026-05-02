@@ -28,11 +28,24 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
+      const storedUser = localStorage.getItem('user');
+      let role = null;
+      try {
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          role = user?.role;
+        }
+      } catch (e) {
+        console.error('Error parsing user from localStorage', e);
+      }
+
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (!window.location.pathname.startsWith('/login') && 
-          !window.location.pathname.startsWith('/register')) {
-        window.location.href = '/login';
+
+      if (!window.location.pathname.startsWith('/admin/login') && 
+          !window.location.pathname.startsWith('/register') &&
+          !window.location.pathname.startsWith('/superadmin/login')) {
+        window.location.href = role === 'superadmin' ? '/superadmin/login' : '/admin/login';
       }
     }
     return Promise.reject(error.response?.data || error.message);
@@ -48,9 +61,11 @@ const apiService = {
   forgotPassword: (data) => api.post('/auth/forgotpassword', data),
   resetPassword: (token, data) => api.put(`/auth/resetpassword/${token}`, data),
   getUsers: () => api.get('/auth/users'),
+  sendOTP: (data) => api.post('/auth/send-otp', data),
+  verifyOTP: (data) => api.post('/auth/verify-otp', data),
 
   // Machines (Hierarchical/Embedded)
-  getMachines: () => api.get('/machines'),
+  getMachines: (params) => api.get('/machines', { params }),
   getMachine: (id) => api.get(`/machines/${id}`),
   createMachine: (data) => api.post('/machines', data),
   updateMachine: (id, data) => api.put(`/machines/${id}`, data),
@@ -59,10 +74,18 @@ const apiService = {
   // Plants
   getPlants: () => api.get('/plants'),
 
-  // Dummy Machine Requests to prevent errors
-  getMachineRequests: () => Promise.resolve({ success: true, data: [] }),
-  approveMachineRequest: (id) => Promise.resolve({ success: true }),
-  rejectMachineRequest: (id, data) => Promise.resolve({ success: true })
+  // Machine Requests
+  getMachineRequests: () => api.get('/machine-requests'),
+  createMachineRequest: (data) => api.post('/machine-requests', data),
+  approveMachineRequest: (id) => api.post(`/machine-requests/${id}/approve`),
+  rejectMachineRequest: (id, data) => api.post(`/machine-requests/${id}/reject`, data),
+
+  // Notifications
+  getNotifications: () => api.get('/notifications'),
+  markNotificationRead: (id) => api.put(`/notifications/${id}/read`),
+
+  // Dashboard Stats
+  getDashboardStats: () => api.get('/dashboard/stats')
 };
 
 export default apiService;

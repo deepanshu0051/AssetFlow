@@ -20,7 +20,7 @@ const PortalEntry = () => {
         <div className="portal-options">
           <div 
             className="portal-circle super-admin"
-            onClick={() => navigate('/super-admin-auth')}
+            onClick={() => navigate('/superadmin/login')}
           >
             <div className="circle-inner">
               <i className="fas fa-user-shield"></i>
@@ -31,7 +31,7 @@ const PortalEntry = () => {
 
           <div 
             className="portal-circle admin"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/admin/login')}
           >
             <div className="circle-inner">
               <i className="fas fa-user-tie"></i>

@@ -144,8 +144,9 @@ const Login = () => {
         <button 
           className="back-btn" 
           onClick={() => navigate('/')}
+          title="Back to Role Selection"
         >
-          <ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} /> Back to Role Selection
+          <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
         </button>
 
         <div className="auth-header">
@@ -202,7 +203,7 @@ const Login = () => {
         </form>
         
         <p className="auth-footer">
-          Don't have an account? <Link to="/register">Create an account</Link>
+           Don't have an account? <Link to="/register">Create Account</Link>
         </p>
       </div>
     </div>

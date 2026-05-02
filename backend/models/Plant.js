@@ -4,14 +4,16 @@ const MachineSchema = new mongoose.Schema({
   machineName: {
     type: String,
     required: [true, 'Please add a machine name'],
-    trim: true
+    trim: true,
+    match: [/^[a-zA-Z]+$/, 'Machine name can only contain letters (no spaces or special characters)']
   },
   serialNumber: {
     type: String,
     required: [true, 'Please add a serial number'],
     unique: true,
     sparse: true,
-    trim: true
+    trim: true,
+    match: [/^[a-zA-Z0-9]+$/, 'Serial number can only contain letters and numbers']
   },
   purchaseDate: {
     type: Date,
@@ -19,12 +21,16 @@ const MachineSchema = new mongoose.Schema({
   },
   cost: {
     type: Number,
-    required: [true, 'Please add a cost']
+    required: [true, 'Please add a cost'],
+    min: [5000, 'Minimum machine cost must be 5000'],
+    max: [10000000, 'Cost exceeds safety threshold']
   },
   gstPercentage: {
     type: Number,
     required: [true, 'Please add GST percentage'],
-    default: 18
+    default: 18,
+    min: [0, 'GST percentage cannot be negative'],
+    max: [100, 'GST percentage cannot exceed 100']
   },
   gstAmount: {
     type: Number,

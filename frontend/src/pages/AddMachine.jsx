@@ -81,11 +81,23 @@ const AddMachine = () => {
       return 'This field is required';
     }
 
+    if (name === 'machineName') {
+      if (!/^[a-zA-Z]+$/.test(trimmedValue)) {
+        error = 'Only letters are allowed (no spaces or special characters)';
+      }
+    }
+
+    if (name === 'serialNumber') {
+      if (!/^[a-zA-Z0-9]+$/.test(trimmedValue)) {
+        error = 'Only letters and numbers are allowed';
+      }
+    }
+
     if (name === 'cost') {
       if (!/^\d+(\.\d+)?$/.test(trimmedValue)) {
         error = 'Only numbers are allowed';
-      } else if (parseFloat(trimmedValue) <= 0) {
-        error = 'Cost must be a positive number';
+      } else if (parseFloat(trimmedValue) < 5000) {
+        error = 'Minimum machine cost must be 5000';
       }
     }
 
@@ -124,9 +136,34 @@ const AddMachine = () => {
     return isValid;
   };
 
+  const hasErrors = Object.values(errors).some(err => err !== '');
+  const isSubmitDisabled = loading || hasErrors;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Check if any mandatory field is empty
+    const mandatoryFields = ['machineName', 'serialNumber', 'plantName', 'purchaseDate', 'cost'];
+    const emptyFields = mandatoryFields.filter(field => !formData[field]);
+
+    if (emptyFields.length > 0) {
+      addToast('Please fill all details', 'error');
+      // Highlight empty fields
+      const newErrors = { ...errors };
+      emptyFields.forEach(field => {
+        newErrors[field] = 'This field is required';
+      });
+      setErrors(newErrors);
+      return;
+    }
+
+    // Double check cost validation
+    if (parseFloat(formData.cost) < 5000) {
+      addToast('Minimum machine cost must be 5000', 'error');
+      setErrors(prev => ({ ...prev, cost: 'Minimum machine cost must be 5000' }));
+      return;
+    }
+
     if (!validateForm()) {
       addToast('Please correct the validation errors', 'error');
       return;
@@ -148,13 +185,20 @@ const AddMachine = () => {
       let response;
       if (isEdit) {
         response = await api.updateMachine(id, payload);
+      } else if (!isSuperAdmin) {
+        // Admin sends request
+        response = await api.createMachineRequest(payload);
       } else {
-        // Direct creation for both (as per the "Clean Rebuild" direct createdByAdmin req)
+        // Super Admin saves directly
         response = await api.createMachine(payload);
       }
         
       if (response.success) {
-        addToast(isEdit ? 'Machine updated successfully!' : 'Machine added successfully!', 'success');
+        addToast(
+          isEdit ? 'Machine updated successfully!' : 
+          (!isSuperAdmin ? 'Request sent to Super Admin' : 'Machine added successfully!'), 
+          'success'
+        );
         navigate('/machines');
       }
     } catch (err) {
@@ -181,20 +225,22 @@ const AddMachine = () => {
             <FormInput
               label="Machine Name"
               name="machineName"
-              placeholder="e.g. Laser CNC X1"
+              placeholder="e.g. LaserX"
               value={formData.machineName}
               onChange={handleChange}
               required
               error={errors.machineName}
+              isValid={formData.machineName !== '' && /^[a-zA-Z]+$/.test(formData.machineName)}
             />
             <FormInput
               label="Serial Number"
               name="serialNumber"
-              placeholder="e.g. SN-2024-001"
+              placeholder="e.g. SN2024001"
               value={formData.serialNumber}
               onChange={handleChange}
               required
               error={errors.serialNumber}
+              isValid={formData.serialNumber !== '' && /^[a-zA-Z0-9]+$/.test(formData.serialNumber)}
             />
             <FormInput
               label="Plant Name"
@@ -253,9 +299,9 @@ const AddMachine = () => {
 
           <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={() => navigate('/machines')} disabled={loading}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={isSubmitDisabled}>
               <Save size={18} />
-              <span>{loading ? 'Saving...' : isEdit ? 'Update Machine' : 'Save Machine'}</span>
+              <span>{loading ? 'Processing...' : isEdit ? 'Update Machine' : (isSuperAdmin ? 'Save Machine' : 'Request Machine')}</span>
             </button>
           </div>
         </form>

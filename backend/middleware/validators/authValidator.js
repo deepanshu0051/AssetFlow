@@ -8,8 +8,8 @@ exports.registerValidation = [
   body('email')
     .notEmpty()
     .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Please provide a valid email'),
+    .matches(/^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/)
+    .withMessage('Enter a valid Gmail (lowercase letters required, only one dot allowed, must include at least one letter)'),
   body('password')
     .notEmpty()
     .withMessage('Password is required')
@@ -22,12 +22,12 @@ exports.registerValidation = [
 ];
 
 exports.loginValidation = [
-  body('email', 'Please include a valid email').isEmail(),
+  body('email', 'Enter a valid Gmail').matches(/^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/),
   body('password', 'Password is required').exists()
 ];
 
 exports.forgotPasswordValidation = [
-  body('email', 'Please include a valid email').isEmail()
+  body('email', 'Enter a valid Gmail').matches(/^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/)
 ];
 
 exports.resetPasswordValidation = [

@@ -100,7 +100,7 @@ const ForgotPassword = ({ role = 'admin' }) => {
         )}
         
         <p className="auth-footer mt-6 text-center">
-          Remember your password? <Link to={backLink}>Back to {isSuperAdmin ? 'Super Admin Auth' : 'Login'}</Link>
+          Remember your password? Back to <Link to={backLink}>{isSuperAdmin ? 'Super Admin Auth' : 'Login'}</Link>
         </p>
       </div>
     </div>

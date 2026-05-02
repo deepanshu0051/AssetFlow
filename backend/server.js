@@ -14,6 +14,9 @@ dotenv.config({ path: '../.env' });
 const machineRoutes = require('./routes/machineRoutes');
 const authRoutes = require('./routes/authRoutes');
 const plantRoutes = require('./routes/plantRoutes');
+const machineRequestRoutes = require('./routes/machineRequestRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -57,27 +60,39 @@ app.use((req, res, next) => {
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 100
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: process.env.NODE_ENV === 'development' ? 1000 : 200, // Relaxed for dev
+  message: {
+    success: false,
+    message: 'Too many requests, please try again later'
+  }
 });
 app.use('/api', limiter);
 
-// Strict rate limiting for auth routes
+// Optimized rate limiting for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'development' ? 500 : 100, // Higher threshold for normal usage
   message: {
     success: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes'
-  }
+    message: 'Too many requests, please try again later'
+  },
+  skip: (req, res) => process.env.NODE_ENV === 'development' // Optional extra bypass for dev
 });
+
+// Apply authLimiter to all authentication-sensitive routes
 app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgotpassword', authLimiter);
+app.use('/api/auth/me', authLimiter);
 
 // Mount routes
 app.use('/api/machines', machineRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/plants', plantRoutes);
+app.use('/api/machine-requests', machineRequestRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'Database Connected Successfully' });
@@ -99,7 +114,6 @@ const seedPlants = async () => {
     const exists = await Plant.findOne({ plantName });
     if (!exists) {
       await Plant.create({ plantName, machines: [] });
-      console.log(`  → Seeded plant: ${plantName}`);
     }
   }
 };

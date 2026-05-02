@@ -1,9 +1,10 @@
+/* ===== DataTable Premium Polish ===== */
 .table-container {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .data-table {
@@ -12,63 +13,87 @@
   text-align: left;
 }
 
+/* Table Header */
 .data-table th {
-  background-color: var(--bg-main);
-  padding: 16px 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  background-color: var(--bg-surface);
+  padding: 14px 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
 }
 
+/* Table Cells */
 .data-table td {
-  padding: 16px 20px;
-  font-size: 0.9rem;
+  padding: 14px 20px;
+  font-size: 0.875rem;
   color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  vertical-align: middle;
+}
+
+[data-theme="dark"] .data-table td {
+  border-bottom-color: rgba(30, 41, 59, 0.8);
 }
 
 .data-table tr:last-child td {
   border-bottom: none;
 }
 
-.data-table tr:hover td {
-  background-color: var(--accent-color);
+/* Row hover highlight */
+.data-table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
+.data-table tbody tr:hover td {
+  background-color: rgba(59, 130, 246, 0.04);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover td {
+  background-color: rgba(99, 102, 241, 0.06);
+}
+
+/* Empty state */
 .empty-row {
   text-align: center;
-  padding: 40px !important;
+  padding: 48px 20px !important;
   color: var(--text-muted);
 }
 
+/* Action buttons */
 .action-btn {
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  transition: all var(--transition-fast);
-  margin-right: 8px;
+  transition: all 0.15s ease;
+  margin-right: 6px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
+  cursor: pointer;
 }
 
 .action-btn:hover {
   background: var(--accent-color);
 }
 
-.action-btn.view { 
-  color: var(--primary); 
+.action-btn.view {
+  color: var(--primary);
   background-color: var(--info-bg);
-  border-color: var(--primary); 
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.view:hover {
+  background-color: rgba(59, 130, 246, 0.15);
 }
 
 .action-btn.delete {
   color: var(--danger);
   background-color: var(--danger-bg);
-  border-color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .action-btn.delete:hover {
@@ -76,9 +101,14 @@
   color: var(--text-on-primary);
 }
 
-/* Sorting & Pagination enhancements */
+/* Sortable header */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
 .sortable-header:hover {
-  background-color: var(--accent-light);
+  background-color: var(--accent-color);
 }
 
 .sort-icon {
@@ -92,6 +122,7 @@
   opacity: 0.3;
 }
 
+/* Utility */
 .empty-row .text-muted {
   color: var(--text-muted);
 }

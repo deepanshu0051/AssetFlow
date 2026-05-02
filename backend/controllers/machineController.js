@@ -1,5 +1,6 @@
 const Plant = require('../models/Plant');
 const DeletedMachine = require('../models/DeletedMachine');
+const Notification = require('../models/Notification');
 const asyncHandler = require('../middleware/asyncHandler');
 
 // @desc    Get all machines (Plant-wise filtering)
@@ -9,11 +10,24 @@ exports.getMachines = asyncHandler(async (req, res, next) => {
   let plants;
 
   if (req.user.role === 'superadmin') {
-    // SuperAdmin sees everything
-    plants = await Plant.find().populate('machines.createdBy', 'name email');
+    // SuperAdmin filtering
+    if (req.query.plant) {
+      plants = await Plant.find({ plantName: req.query.plant })
+        .select('plantName machines')
+        .populate('machines.createdBy', 'name email mobileNumber')
+        .lean();
+    } else {
+      plants = await Plant.find()
+        .select('plantName machines')
+        .populate('machines.createdBy', 'name email mobileNumber')
+        .lean();
+    }
   } else {
     // Admin only sees their plant
-    plants = await Plant.find({ plantName: req.user.plantLocation }).populate('machines.createdBy', 'name email');
+    plants = await Plant.find({ plantName: req.user.plantLocation })
+      .select('plantName machines')
+      .populate('machines.createdBy', 'name email mobileNumber')
+      .lean();
   }
 
   // Flatten machines for the frontend data table if needed, or return grouped by plant
@@ -156,6 +170,43 @@ exports.deleteMachine = asyncHandler(async (req, res, next) => {
   // Remove from plant
   machine.remove();
   await plant.save();
+
+  // Send notification to the Admin if deleted by SuperAdmin
+  if (req.user.role === 'superadmin' && machine.createdBy) {
+    await Notification.create({
+      recipient: machine.createdBy,
+      recipientModel: 'Admin',
+      type: 'machine_deleted',
+      title: 'Machine Deleted By SuperAdmin',
+      message: `Machine "${machine.machineName}" (${machine.serialNumber}) was deleted by SuperAdmin ${req.user.name}.`,
+      data: {
+        machineName: machine.machineName,
+        serialNumber: machine.serialNumber,
+        plantName: plant.plantName,
+        superAdminName: req.user.name
+      }
+    });
+  } else if (req.user.role === 'admin') {
+    // Send notification to ALL SuperAdmins if deleted by Admin
+    const SuperAdmin = require('../models/SuperAdmin');
+    const superAdmins = await SuperAdmin.find();
+    
+    for (const sa of superAdmins) {
+      await Notification.create({
+        recipient: sa._id,
+        recipientModel: 'SuperAdmin',
+        type: 'machine_deleted',
+        title: 'Machine Deleted By Admin',
+        message: `Machine "${machine.machineName}" (${machine.serialNumber}) was deleted by Admin ${req.user.name}.`,
+        data: {
+          machineName: machine.machineName,
+          serialNumber: machine.serialNumber,
+          plantName: plant.plantName,
+          adminName: req.user.name
+        }
+      });
+    }
+  }
 
   res.status(200).json({
     success: true,

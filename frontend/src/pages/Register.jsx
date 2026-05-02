@@ -5,6 +5,7 @@ import { AlertCircle, UserPlus, CheckCircle, ArrowRight } from 'lucide-react';
 import FormInput from '../components/FormInput';
 import apiService from '../services/api';
 import ThemeToggle from '../components/ThemeToggle';
+import OTPModal from '../components/OTPModal';
 import './AuthPages.css';
 
 const Register = () => {
@@ -13,7 +14,9 @@ const Register = () => {
     email: '',
     plantLocation: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    mobileNumber: '',
+    adminAccessId: ''
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -21,6 +24,9 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [plants, setPlants] = useState([]);
+  const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const navigate = useNavigate();
   const { register, isAuthenticated, user } = useAuth();
 
@@ -44,6 +50,7 @@ const Register = () => {
   const nameRegex = /^[A-Za-z ]+$/;
   const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+  const mobileRegex = /^\d{10}$/;
 
   const validateField = (name, value) => {
     let errorMsg = '';
@@ -65,6 +72,15 @@ const Register = () => {
         break;
       case 'confirmPassword':
         if (value !== formData.password) errorMsg = 'Passwords do not match';
+        break;
+      case 'mobileNumber':
+        if (!value) errorMsg = 'Mobile Number is required';
+        else if (!/^\d+$/.test(value)) errorMsg = 'Only numbers allowed';
+        else if (value.length !== 10) errorMsg = 'Exactly 10 digits required';
+        break;
+      case 'adminAccessId':
+        if (!value.trim()) errorMsg = 'Admin Access ID is required';
+        else if (value !== 'AF202600') errorMsg = 'Invalid Admin Access ID';
         break;
       default:
         break;
@@ -97,7 +113,9 @@ const Register = () => {
       email: true,
       plantLocation: true,
       password: true,
-      confirmPassword: true
+      confirmPassword: true,
+      mobileNumber: true,
+      adminAccessId: true
     });
     return Object.keys(errors).length === 0;
   };
@@ -106,6 +124,11 @@ const Register = () => {
     e.preventDefault();
     
     if (!validateForm()) return;
+    
+    if (!isEmailVerified) {
+      setError('Please verify your email first');
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -157,12 +180,51 @@ const Register = () => {
       <div className="auth-theme-wrapper">
         <ThemeToggle />
       </div>
+
+      <OTPModal
+        isOpen={isOTPModalOpen}
+        onClose={() => setIsOTPModalOpen(false)}
+        email={formData.email}
+        loading={otpLoading}
+        onVerify={async (otp) => {
+          setOtpLoading(true);
+          try {
+            const res = await apiService.verifyOTP({ 
+              email: formData.email, 
+              role: 'admin', 
+              otp 
+            });
+            if (res.success) {
+              setIsEmailVerified(true);
+              setIsOTPModalOpen(false);
+              return { success: true };
+            }
+            return { success: false, message: res.message };
+          } catch (err) {
+            return { success: false, message: 'Verification failed' };
+          } finally {
+            setOtpLoading(false);
+          }
+        }}
+        onResend={async () => {
+          setOtpLoading(true);
+          try {
+            const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+            return res.success;
+          } catch (err) {
+            return false;
+          } finally {
+            setOtpLoading(false);
+          }
+        }}
+      />
       <div className="auth-card">
         <button 
           className="back-btn" 
           onClick={() => navigate('/')}
+          title="Back to Role Selection"
         >
-          <ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} /> Back to Role Selection
+          <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
         </button>
 
         <div className="auth-header">
@@ -202,6 +264,35 @@ const Register = () => {
             error={fieldErrors.email}
             autoComplete="off"
             required
+            readOnly={isEmailVerified}
+            rightAction={
+              isEmailVerified ? (
+                <span className="text-green-500 font-bold" style={{ fontSize: '0.8rem', paddingRight: '8px' }}>Verified ✓</span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-verify-input"
+                  onClick={async () => {
+                    setOtpLoading(true);
+                    try {
+                      const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+                      if (res.success) {
+                        setIsOTPModalOpen(true);
+                      } else {
+                        setError(res.message);
+                      }
+                    } catch (err) {
+                      setError('Failed to send OTP');
+                    } finally {
+                      setOtpLoading(false);
+                    }
+                  }}
+                  disabled={otpLoading || !emailRegex.test(formData.email)}
+                >
+                  {otpLoading ? '...' : 'Verify'}
+                </button>
+              )
+            }
           />
           <FormInput
             label="Plant Location"
@@ -213,6 +304,31 @@ const Register = () => {
             onBlur={() => handleBlur('plantLocation')}
             isValid={!!formData.plantLocation}
             error={fieldErrors.plantLocation}
+            required
+          />
+          <FormInput
+            label="Mobile Number"
+            name="mobileNumber"
+            placeholder="10-digit mobile number"
+            value={formData.mobileNumber}
+            onChange={handleChange}
+            onBlur={() => handleBlur('mobileNumber')}
+            isValid={mobileRegex.test(formData.mobileNumber)}
+            error={fieldErrors.mobileNumber}
+            prefix="+91"
+            maxLength={10}
+            required
+          />
+          <FormInput
+            label="Admin Access ID"
+            name="adminAccessId"
+            type="password"
+            placeholder="Enter Admin Access ID"
+            value={formData.adminAccessId}
+            onChange={handleChange}
+            onBlur={() => handleBlur('adminAccessId')}
+            isValid={formData.adminAccessId === 'AF202600'}
+            error={fieldErrors.adminAccessId}
             required
           />
           <FormInput
@@ -253,7 +369,7 @@ const Register = () => {
         </form>
         
         <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in here</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </div>
     </div>
