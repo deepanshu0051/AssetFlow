@@ -5,7 +5,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express", "mongoose", "bcryptjs", "jsonwebtoken", "dotenv", "cors", "helmet", "express-rate-limit", "express-mongo-sanitize", "express-validator", "nodemailer", "winston"]
+  external_node_modules = ["express", "mongoose", "bcryptjs", "jsonwebtoken", "dotenv", "cors", "helmet", "express-rate-limit", "express-mongo-sanitize", "express-validator", "nodemailer", "winston", "serverless-http"]
 
 [[redirects]]
   from = "/api/*"

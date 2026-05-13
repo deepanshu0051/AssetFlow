@@ -29,10 +29,17 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(ao => ao.trim() === origin.trim());
+    const isNetlify = origin.endsWith('.netlify.app') || origin.endsWith('.vercel.app');
+    
+    if (isAllowed || isNetlify || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
+      console.warn(`CORS Blocked: Origin ${origin} not in ALLOWED_ORIGINS`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -96,6 +103,21 @@ app.use('/api/machine-requests', machineRequestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Backend is running correctly',
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasEmailUser: !!process.env.EMAIL_USER,
+      hasEmailPass: !!process.env.EMAIL_PASS,
+      allowedOrigins: process.env.ALLOWED_ORIGINS
+    }
+  });
+});
+
 app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'Database Connected Successfully' });
 });
@@ -141,4 +163,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = app;
+module.exports = { app, seedPlants };
