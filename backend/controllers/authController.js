@@ -12,12 +12,22 @@ const sendEmail = require('../utils/sendEmail');
 exports.register = asyncHandler(async (req, res, next) => {
   const { name, email, password, specialAdminId, adminAccessId, plantLocation } = req.body;
 
-  // If specialAdminId is provided -> Attempt Super Admin Registration (DISABLED)
+  // If specialAdminId is provided -> Attempt Super Admin Registration
   if (specialAdminId !== undefined || req.body.role === 'superadmin') {
-    return res.status(403).json({
-      success: false,
-      message: 'SuperAdmin registration is disabled'
-    });
+    if (!specialAdminId || specialAdminId !== process.env.SUPER_ADMIN_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized Super Admin Registration: Invalid Special Admin ID'
+      });
+    }
+
+    // Register as Super Admin
+    const superAdmin = await SuperAdmin.create({ name, email, password });
+    
+    // Delete the OTP record after successful registration
+    await OTP.deleteOne({ _id: otpRecord._id });
+    
+    return sendTokenResponse(superAdmin, 201, res);
   }
 
   // Basic empty field validation
@@ -55,13 +65,6 @@ exports.register = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // If specialAdminId is provided -> Attempt Super Admin Registration (DISABLED)
-  if (specialAdminId !== undefined) {
-    return res.status(403).json({
-      success: false,
-      message: 'SuperAdmin registration is disabled'
-    });
-  }
 
   // Otherwise, register as regular Admin
   if (!adminAccessId || adminAccessId !== process.env.ADMIN_ACCESS_ID) {

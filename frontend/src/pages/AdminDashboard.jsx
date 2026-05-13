@@ -22,7 +22,7 @@ const AdminDashboard = () => {
       const res = await api.getDashboardStats();
       if (res.success) {
         setStats([
-          { title: 'Plant Machines', value: res.data.totalMachines.toString(), icon: Cpu, color: '#2563eb' }
+          { title: 'Plant Machines', value: (res.data?.totalMachines || 0).toString(), icon: Cpu, color: '#2563eb' }
         ]);
       }
     } catch (err) {
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     { 
       key: 'purchaseDate', 
       header: 'Purchase Date',
-      render: (item) => new Date(item.purchaseDate).toLocaleDateString()
+      render: (item) => item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : 'N/A'
     },
   ];
 
@@ -71,9 +71,10 @@ const AdminDashboard = () => {
     <div className="dashboard-page premium-dashboard">
       <Header title={
         <div className="admin-header-content">
-          <Factory size={22} className="premium-icon" />
-          <span>Dashboard</span>
-          <span className="plant-badge">{plantName}</span>
+          <Factory size={20} className="premium-icon" />
+          <h2 className="header-title-text">
+            {plantName} Dashboard
+          </h2>
         </div>
       } />
       

@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SuperAdminAuth from './pages/SuperAdminAuth';
+import SuperAdminRegister from './pages/SuperAdminRegister';
 import PortalEntry from './pages/PortalEntry';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -46,6 +47,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<PortalEntry />} />
               <Route path="/superadmin/login" element={<SuperAdminAuth />} />
+              <Route path="/superadmin/register" element={<SuperAdminRegister />} />
               <Route path="/admin/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin/forgot-password" element={<ForgotPassword role="admin" />} />

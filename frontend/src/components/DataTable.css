@@ -140,3 +140,21 @@
 .hover\:bg-accent:hover {
   background-color: var(--accent-color);
 }
+
+/* ===== Mobile Responsiveness ===== */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .data-table th,
+  .data-table td {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+
+  .data-table th {
+    font-size: 0.68rem;
+  }
+}

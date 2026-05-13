@@ -24,9 +24,9 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     clearSearchTerm();
-    const redirectPath = user?.role === 'superadmin' ? '/superadmin/login' : '/admin/login';
-    logout();
-    navigate(redirectPath);
+    const role = logout();
+    const redirectPath = role === 'superadmin' ? '/superadmin/login' : '/admin/login';
+    navigate(redirectPath, { replace: true });
   };
   const menuGroups = [
     {
@@ -54,7 +54,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="logo-icon">AF</div>
+        <div className="logo-icon-box">AF</div>
         <span className="logo-text">AssetFlow</span>
       </div>
       
@@ -62,12 +62,13 @@ const Sidebar = () => {
         {menuGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="nav-group">
             <h3 className="nav-group-title">{group.title}</h3>
-            <ul>
+            <ul className="nav-list">
               {group.items.map((item, itemIdx) => (
                 <li key={itemIdx}>
                   <NavLink 
                     to={item.path} 
                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    onClick={() => {}}
                   >
                     <item.icon className="nav-icon" size={18} />
                     <span>{item.name}</span>
@@ -80,17 +81,21 @@ const Sidebar = () => {
       </nav>
       
       <div className="sidebar-footer">
-        <NavLink to="/settings" className={({ isActive }) => `nav-link settings-nav-link ${isActive ? 'active' : ''}`}>
-          <Settings className="nav-icon" size={18} />
-          <span>Settings</span>
-        </NavLink>
+        <div className="footer-nav">
+          <NavLink to="/settings" className={({ isActive }) => `nav-link footer-link ${isActive ? 'active' : ''}`}>
+            <Settings className="nav-icon" size={18} />
+            <span>Settings</span>
+          </NavLink>
+        </div>
         
-        <div className="user-profile">
-          <div className="avatar">{user?.name ? user.name.substring(0, 2).toUpperCase() : 'US'}</div>
-          <div className="user-info">
-            <p className="user-name">{user?.name || 'User'}</p>
+        <div className="user-profile-card">
+          <div className="profile-avatar">
+            {user?.name ? user.name.substring(0, 2).toUpperCase() : 'US'}
           </div>
-          <button className="logout-btn" onClick={handleLogout} title="Logout">
+          <div className="profile-info">
+            <p className="profile-name">{user?.name || 'User'}</p>
+          </div>
+          <button className="profile-logout" onClick={handleLogout} title="Logout">
             <LogOut size={18} />
           </button>
         </div>

@@ -10,9 +10,11 @@ import './SuperAdminDashboard.css';
 const PLANTS = ['Noida', 'Delhi', 'Mumbai', 'Greater Noida'];
 
 const SuperAdminDashboard = () => {
+  const [plantsData, setPlantsData] = useState([]);
   const [activePlant, setActivePlant] = useState(null);
   const [machines, setMachines] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [loadingPlants, setLoadingPlants] = useState(false);
   const [error, setError] = useState(null);
   
   const [viewMachine, setViewMachine] = useState(null);
@@ -20,6 +22,24 @@ const SuperAdminDashboard = () => {
   const [deleting, setDeleting] = useState(false);
   
   const { searchTerm } = useSearch();
+
+  // Fetch plants on mount
+  React.useEffect(() => {
+    const fetchPlants = async () => {
+      try {
+        setLoadingPlants(true);
+        const res = await api.getPlants();
+        if (res.success) {
+          setPlantsData(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch plants:', err);
+      } finally {
+        setLoadingPlants(false);
+      }
+    };
+    fetchPlants();
+  }, []);
 
   const fetchMachinesForPlant = async (plantName) => {
     if (activePlant === plantName) return; // Already viewing
@@ -55,6 +75,17 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  // Plant card themes based on Design #5
+  const getPlantTheme = (name) => {
+    const themes = {
+      'Noida': 'theme-blue',
+      'Delhi': 'theme-green',
+      'Mumbai': 'theme-purple',
+      'Greater Noida': 'theme-orange'
+    };
+    return themes[name] || 'theme-gray';
+  };
+
   const filteredMachines = searchTerm 
     ? machines.filter(m => 
         m.machineName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -62,6 +93,7 @@ const SuperAdminDashboard = () => {
       )
     : machines;
 
+  // Columns and DetailRow stay the same...
   const machineColumns = [
     { key: 'machineName', header: 'Machine Name' },
     { key: 'serialNumber', header: 'Serial Number' },
@@ -80,20 +112,20 @@ const SuperAdminDashboard = () => {
       key: 'actions',
       header: 'Actions',
       render: (item) => (
-        <div className="flex items-center gap-3">
+        <div className="table-actions-row">
           <button 
             onClick={() => setViewMachine(item)}
-            className="text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+            className="action-icon-btn action-view"
             title="View Details"
           >
-            <Eye size={18} />
+            <Eye size={16} />
           </button>
           <button 
             onClick={() => setDeleteMachineId(item._id)}
-            className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+            className="action-icon-btn action-delete"
             title="Delete Machine"
           >
-            <Trash2 size={18} />
+            <Trash2 size={16} />
           </button>
         </div>
       )
@@ -117,46 +149,61 @@ const SuperAdminDashboard = () => {
         </div>
       } />
       
-      <div className="px-6 pt-6 max-w-7xl mx-auto">
+      <div className="px-8 pt-8 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold text-white mb-6">Plants</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PLANTS.map(plant => {
-            const isActive = activePlant === plant;
-            return (
-              <div 
-                key={plant}
-                onClick={() => fetchMachinesForPlant(plant)}
-                className={`premium-card cursor-pointer transition-all duration-300 rounded-2xl border ${
-                  isActive 
-                    ? 'border-indigo-500 bg-[#24243e] shadow-[0_0_20px_rgba(99,102,241,0.15)] transform -translate-y-1' 
-                    : 'border-gray-800 bg-[#1e1e2d] hover:border-gray-600 hover:-translate-y-1'
-                } p-5`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-4 rounded-xl transition-colors duration-300 ${
-                    isActive ? 'bg-indigo-600' : 'bg-gray-800 group-hover:bg-gray-700'
-                  }`}>
-                    <Factory size={24} className="text-white" />
+        
+        {loadingPlants ? (
+          <div className="plants-grid">
+            {[1, 2, 3, 4].map(i => <SkeletonLoader key={i} type="card" />)}
+          </div>
+        ) : (
+          <div className="plants-grid">
+            {plantsData.map((plant) => {
+              const isActive = activePlant === plant.plantName;
+              return (
+                <div 
+                  key={plant.plantName}
+                  onClick={() => fetchMachinesForPlant(plant.plantName)}
+                  className={`plant-compact-card ${getPlantTheme(plant.plantName)} ${isActive ? 'active' : ''}`}
+                >
+                  <div className="compact-card-body">
+                    <div className="compact-card-left">
+                      <div className="compact-icon-box">
+                        <Factory size={20} />
+                      </div>
+                      <div className="compact-name-group">
+                        <h3 className="compact-plant-name">{plant.plantName}</h3>
+                        <p className="compact-view-text">View Machines</p>
+                      </div>
+                    </div>
+                    
+                    <div className="compact-stats-group">
+                      <div className="compact-stats-label">Machines</div>
+                      <div className="compact-stats-value">{plant.machineCount}</div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{plant}</h3>
-                    <p className={`text-sm ${isActive ? 'text-indigo-200' : 'text-gray-400'}`}>
-                      {isActive ? 'Currently Viewing' : 'View Machines'}
-                    </p>
+                  
+                  <div className="compact-card-action">
+                    <div className="compact-arrow-btn">
+                      <Eye size={16} />
+                    </div>
                   </div>
+                  
+                  {/* Decorative silhouette background */}
+                  <div className="card-silhouette"></div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="dashboard-content section px-6 max-w-7xl mx-auto mt-8">
+      <div className="dashboard-content section px-8 max-w-7xl mx-auto mt-8">
         {!activePlant && (
-          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-gray-700 rounded-2xl bg-gray-900/30">
-            <Factory size={48} className="text-gray-600 mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">Select a Plant</h3>
-            <p className="text-gray-400">Click on any plant card above to instantly view and manage its machines.</p>
+          <div className="select-plant-placeholder">
+            <Factory size={64} className="placeholder-icon" />
+            <h3 className="placeholder-title">Select a Plant</h3>
+            <p className="placeholder-desc">Click on any plant card above to instantly view and manage its machines.</p>
           </div>
         )}
 
@@ -192,36 +239,49 @@ const SuperAdminDashboard = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal - Centered Popup */}
       {deleteMachineId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#1e1e2d] border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold flex items-center gap-2 text-red-500">
-                <AlertTriangle size={20} /> Confirm Deletion
-              </h3>
-              <button onClick={() => setDeleteMachineId(null)} className="text-gray-400 hover:text-white cursor-pointer">
-                <X size={20} />
-              </button>
-            </div>
-            <p className="mb-6 text-gray-300 text-sm">
-              Are you sure you want to permanently delete this machine? The Admin who added it will be automatically notified.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setDeleteMachineId(null)} 
-                className="px-4 py-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 text-sm font-medium transition-colors cursor-pointer"
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleDeleteMachine} 
-                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
-                disabled={deleting}
-              >
-                {deleting ? 'Deleting...' : 'Yes, Delete'}
-              </button>
+        <div className="delete-modal-overlay">
+          <div className="delete-modal-card">
+            <div className="delete-modal-body">
+              <div className="delete-modal-icon-wrap">
+                <AlertTriangle size={32} />
+              </div>
+              
+              <div className="delete-modal-badge">
+                <span>Super Admin Action</span>
+              </div>
+              
+              <h3 className="delete-modal-title">Confirm Deletion</h3>
+              
+              <p className="delete-modal-desc">
+                You are about to delete this machine. The Admin who added it will be automatically notified.
+                <span className="delete-modal-warn">This action will move the record to history tracking.</span>
+              </p>
+              
+              <div className="delete-modal-actions">
+                <button 
+                  onClick={() => setDeleteMachineId(null)} 
+                  className="dm-btn dm-btn-cancel"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDeleteMachine} 
+                  className="dm-btn dm-btn-delete"
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <span className="dm-spinner"></span>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

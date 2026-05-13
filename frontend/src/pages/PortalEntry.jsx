@@ -1,11 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import './PortalEntry.css';
 
 const PortalEntry = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
 
+  // If already logged in, redirect to the correct dashboard
+  if (isAuthenticated && user) {
+    if (user.role === 'superadmin') {
+      return <Navigate to="/superadmin/dashboard" replace />;
+    }
+    return <Navigate to="/admin/dashboard" replace />;
+  }
   return (
     <div className="portal-container">
       <div className="auth-theme-wrapper">

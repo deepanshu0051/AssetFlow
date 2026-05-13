@@ -47,7 +47,9 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur,
           >
             <option value="" disabled>{placeholder || 'Select an option'}</option>
             {options?.map((opt, idx) => (
-              <option key={idx} value={opt.value || opt}>{opt.label || opt}</option>
+              <option key={idx} value={opt.value || opt.plantName || opt}>
+                {opt.label || opt.plantName || (typeof opt === 'object' ? JSON.stringify(opt) : opt)}
+              </option>
             ))}
           </select>
         ) : type === 'textarea' ? (

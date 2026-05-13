@@ -246,7 +246,7 @@ const AddMachine = () => {
               label="Plant Name"
               name="plantName"
               type={isSuperAdmin ? 'select' : 'text'}
-              options={isSuperAdmin ? (plants.length > 0 ? plants : ['Loading...']) : []}
+              options={isSuperAdmin ? (plants.length > 0 ? plants.map(p => p.plantName || p) : ['Loading...']) : []}
               value={formData.plantName}
               onChange={handleChange}
               readOnly={!isSuperAdmin}

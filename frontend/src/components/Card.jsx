@@ -4,16 +4,16 @@ import './Card.css';
 const Card = ({ title, value, icon: Icon, trend, trendValue, color, variant = 'standard' }) => {
   return (
     <div className={`summary-card ${variant}-card`}>
-      <div className="card-header">
-        <div className="card-info">
-          <p className="card-title">{title}</p>
-          <h3 className="card-value">{value}</h3>
-        </div>
+      <div className="card-top">
+        <p className="card-title">{title}</p>
         {Icon && (
           <div className="card-icon-wrapper" style={{ backgroundColor: `${color}15`, color: color }}>
-            <Icon size={24} />
+            <Icon size={20} />
           </div>
         )}
+      </div>
+      <div className="card-main">
+        <h3 className="card-value">{value}</h3>
       </div>
       {trend && (
         <div className="card-footer">

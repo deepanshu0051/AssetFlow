@@ -45,7 +45,7 @@ const Header = ({ title }) => {
         </div>
       </div>
       
-      <div className="header-right">
+      <div className="header-center">
         <div className="search-wrapper">
           <Search size={18} className="search-icon" />
           <input 
@@ -56,12 +56,12 @@ const Header = ({ title }) => {
             onChange={(e) => updateSearchTerm(e.target.value)}
           />
         </div>
-        
+      </div>
+      
+      <div className="header-right">
         <div className="header-actions">
           <NotificationBell />
-          <div className="header-divider"></div>
           <ThemeToggle />
-          <div className="header-divider"></div>
           
           <div className="dropdown-wrapper" ref={userMenuRef}>
             <div 

@@ -76,9 +76,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    const currentRole = user?.role;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    return currentRole;
   };
 
   const updateUser = (updatedUser) => {

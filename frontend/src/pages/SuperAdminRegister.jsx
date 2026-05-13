@@ -1,48 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, UserPlus, CheckCircle, ArrowRight } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { ArrowRight, UserPlus, CheckCircle } from 'lucide-react';
 import FormInput from '../components/FormInput';
-import apiService from '../services/api';
 import ThemeToggle from '../components/ThemeToggle';
 import OTPModal from '../components/OTPModal';
-import './AuthPages.css';
+import api from '../services/api';
+import './SuperAdminAuth.css';
 
-const Register = () => {
+const SuperAdminRegister = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    plantLocation: '',
     password: '',
     confirmPassword: '',
-    mobileNumber: '',
-    adminAccessId: ''
+    specialAdminId: ''
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [plants, setPlants] = useState([]);
+  
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  const navigate = useNavigate();
+
   const { register, isAuthenticated, user } = useAuth();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchPlants = async () => {
-      try {
-        const res = await apiService.getPlants();
-        if (res.success) setPlants(res.data);
-      } catch (error) {
-        console.error('Error fetching plant locations', error);
-      }
-    };
-    fetchPlants();
-  }, []);
-
-  // Redirect to dashboard if already logged in
+  // Redirect if already logged in
   if (isAuthenticated && user) {
     if (user.role === 'superadmin') {
       return <Navigate to="/superadmin/dashboard" replace />;
@@ -53,7 +42,6 @@ const Register = () => {
   const nameRegex = /^[A-Za-z ]+$/;
   const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
-  const mobileRegex = /^\d{10}$/;
 
   const validateField = (name, value) => {
     let errorMsg = '';
@@ -64,25 +52,17 @@ const Register = () => {
         break;
       case 'email':
         if (!value.trim()) errorMsg = 'Email is required';
-        else if (!emailRegex.test(value)) errorMsg = 'Enter a valid gmail';
-        break;
-      case 'plantLocation':
-        if (!value) errorMsg = 'Plant Location is required';
+        else if (!emailRegex.test(value)) errorMsg = 'Enter a valid Gmail';
         break;
       case 'password':
         if (!value) errorMsg = 'Password is required';
-        else if (!passwordRegex.test(value)) errorMsg = 'Password must be at least 6 characters and include a letter, number, and special character.';
+        else if (!passwordRegex.test(value)) errorMsg = 'Password must be at least 6 chars with letter, number & special char';
         break;
       case 'confirmPassword':
         if (value !== formData.password) errorMsg = 'Passwords do not match';
         break;
-      case 'mobileNumber':
-        if (!value) errorMsg = 'Mobile Number is required';
-        else if (!/^\d+$/.test(value)) errorMsg = 'Only numbers allowed';
-        else if (value.length !== 10) errorMsg = 'Exactly 10 digits required';
-        break;
-      case 'adminAccessId':
-        if (!value.trim()) errorMsg = 'Admin Access ID is required';
+      case 'specialAdminId':
+        if (!value.trim()) errorMsg = 'Super Admin Key is required';
         break;
       default:
         break;
@@ -110,15 +90,7 @@ const Register = () => {
       if (err) errors[key] = err;
     });
     setFieldErrors(errors);
-    setTouched({
-      name: true,
-      email: true,
-      plantLocation: true,
-      password: true,
-      confirmPassword: true,
-      mobileNumber: true,
-      adminAccessId: true
-    });
+    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
     return Object.keys(errors).length === 0;
   };
 
@@ -129,6 +101,7 @@ const Register = () => {
     
     if (!isEmailVerified) {
       setError('Please verify your email first');
+      addToast('Please verify your email first', 'error');
       return;
     }
     
@@ -136,26 +109,21 @@ const Register = () => {
     setError('');
 
     try {
-      const res = await register(formData);
+      // We pass role: 'superadmin' so the backend knows to use SuperAdmin model
+      const res = await register({ ...formData, role: 'superadmin' });
       if (res.success) {
         setSuccess(true);
+        addToast('Super Admin account created successfully!', 'success');
         setTimeout(() => {
-          navigate('/admin/dashboard', { replace: true });
-        }, 2010);
+          navigate('/superadmin/dashboard', { replace: true });
+        }, 2000);
       } else {
-        if (res.errors) {
-          const serverErrors = {};
-          res.errors.forEach(err => {
-            serverErrors[err.field] = err.message;
-          });
-          setFieldErrors(serverErrors);
-          setError('Please fix the errors below');
-        } else {
-          setError(res.message || 'Registration failed');
-        }
+        setError(res.message || 'Registration failed');
+        addToast(res.message || 'Registration failed', 'error');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError(err.message || 'An unexpected error occurred');
+      addToast(err.message || 'An error occurred', 'error');
     } finally {
       setLoading(false);
     }
@@ -163,20 +131,18 @@ const Register = () => {
 
   if (success) {
     return (
-      <div className="auth-container">
-        <div className="auth-card text-center">
-          <div className="flex justify-center mb-6">
-            <CheckCircle size={64} className="text-green-500" />
-          </div>
-          <h2 className="text-green-600">Registration Successful!</h2>
-          <p className="auth-subtitle">Your account has been created. Redirecting to dashboard...</p>
+      <div className="sa-auth-container">
+        <div className="sa-auth-card" style={{ alignItems: 'center', textAlign: 'center', padding: '40px' }}>
+          <CheckCircle size={64} style={{ color: 'var(--success)', marginBottom: '20px' }} />
+          <h2 style={{ color: 'var(--success)' }}>Registration Successful!</h2>
+          <p style={{ color: 'var(--text-muted)' }}>Welcome, Super Admin. Redirecting to your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="auth-container">
+    <div className="sa-auth-container">
       <div className="auth-theme-wrapper">
         <ThemeToggle />
       </div>
@@ -189,14 +155,15 @@ const Register = () => {
         onVerify={async (otp) => {
           setOtpLoading(true);
           try {
-            const res = await apiService.verifyOTP({ 
+            const res = await api.verifyOTP({ 
               email: formData.email, 
-              role: 'admin', 
+              role: 'superadmin', 
               otp 
             });
             if (res.success) {
               setIsEmailVerified(true);
               setIsOTPModalOpen(false);
+              addToast('Email verified successfully!', 'success');
               return { success: true };
             }
             return { success: false, message: res.message };
@@ -209,7 +176,8 @@ const Register = () => {
         onResend={async () => {
           setOtpLoading(true);
           try {
-            const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+            const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
+            if (res.success) addToast('New OTP sent to your email', 'success');
             return res.success;
           } catch (err) {
             return false;
@@ -218,71 +186,87 @@ const Register = () => {
           }
         }}
       />
-      <div className="auth-card">
+
+      <div className="sa-auth-card">
         <button 
-          className="back-btn" 
-          onClick={() => navigate('/')}
-          title="Back to Role Selection"
+          className="sa-back-btn" 
+          onClick={() => navigate('/superadmin/login')}
+          title="Back to Login"
         >
           <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
         </button>
 
-        <div className="auth-header">
-          <h2>Admin <span>Register</span></h2>
-          <p className="auth-subtitle">Join AssetFlow to streamline your industrial resource tracking.</p>
+        <div className="sa-auth-header">
+          <h2>Super Admin <span>Register</span></h2>
+          <p>Create restricted access account</p>
         </div>
-        
+
         {error && (
-          <div className="auth-error">
-            <AlertCircle size={20} />
-            <span>{error}</span>
+          <div className="auth-error" style={{ 
+            background: 'var(--danger-bg)', 
+            color: 'var(--danger)', 
+            padding: '12px', 
+            borderRadius: '12px', 
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: '1px solid rgba(239, 68, 68, 0.2)'
+          }}>
+            <span style={{ fontWeight: 600 }}>Error:</span> {error}
           </div>
         )}
-        
-        <form onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} className="sa-auth-form">
           <FormInput
             label="Full Name"
             name="name"
-            placeholder="Enter your name"
+            placeholder="Super Admin Name"
             value={formData.name}
             onChange={handleChange}
             onBlur={() => handleBlur('name')}
             isValid={nameRegex.test(formData.name)}
             error={fieldErrors.name}
-            autoComplete="off"
             required
           />
+          
           <FormInput
             label="Email Address"
             name="email"
             type="email"
-            placeholder="name@gmail.com"
+            placeholder="admin@gmail.com"
             value={formData.email}
             onChange={handleChange}
             onBlur={() => handleBlur('email')}
             isValid={emailRegex.test(formData.email)}
             error={fieldErrors.email}
-            autoComplete="off"
             required
             readOnly={isEmailVerified}
             rightAction={
               isEmailVerified ? (
-                <span className="text-green-500 font-bold" style={{ fontSize: '0.8rem', paddingRight: '8px' }}>Verified ✓</span>
+                <span style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.8rem', paddingRight: '8px' }}>Verified ✓</span>
               ) : (
                 <button
                   type="button"
-                  className="btn-verify-input"
+                  className="sa-verify-btn"
                   onClick={async () => {
+                    if (!emailRegex.test(formData.email)) {
+                      setFieldErrors(prev => ({ ...prev, email: 'Enter a valid Gmail' }));
+                      return;
+                    }
                     setOtpLoading(true);
                     try {
-                      const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+                      const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
                       if (res.success) {
                         setIsOTPModalOpen(true);
+                        addToast('OTP sent to your email', 'success');
                       } else {
                         setError(res.message);
+                        addToast(res.message, 'error');
                       }
                     } catch (err) {
-                      setError('Failed to send OTP');
+                      addToast('Failed to send OTP', 'error');
                     } finally {
                       setOtpLoading(false);
                     }
@@ -294,57 +278,34 @@ const Register = () => {
               )
             }
           />
+
           <FormInput
-            label="Plant Location"
-            name="plantLocation"
-            type="select"
-            options={plants.length > 0 ? plants.map(p => p.plantName || p) : ['Loading...']}
-            value={formData.plantLocation}
-            onChange={handleChange}
-            onBlur={() => handleBlur('plantLocation')}
-            isValid={!!formData.plantLocation}
-            error={fieldErrors.plantLocation}
-            required
-          />
-          <FormInput
-            label="Mobile Number"
-            name="mobileNumber"
-            placeholder="10-digit mobile number"
-            value={formData.mobileNumber}
-            onChange={handleChange}
-            onBlur={() => handleBlur('mobileNumber')}
-            isValid={mobileRegex.test(formData.mobileNumber)}
-            error={fieldErrors.mobileNumber}
-            prefix="+91"
-            maxLength={10}
-            required
-          />
-          <FormInput
-            label="Admin Access ID"
-            name="adminAccessId"
+            label="Super Admin Key"
+            name="specialAdminId"
             type="password"
-            placeholder="Enter Admin Access ID"
-            value={formData.adminAccessId}
+            placeholder="Enter security key"
+            value={formData.specialAdminId}
             onChange={handleChange}
-            onBlur={() => handleBlur('adminAccessId')}
-            isValid={formData.adminAccessId.trim().length > 0}
-            error={fieldErrors.adminAccessId}
+            onBlur={() => handleBlur('specialAdminId')}
+            isValid={formData.specialAdminId.length > 0}
+            error={fieldErrors.specialAdminId}
             required
           />
+
           <FormInput
             label="Password"
             name="password"
             type="password"
-            placeholder="Enter a strong password"
+            placeholder="Create password"
             value={formData.password}
             onChange={handleChange}
             onBlur={() => handleBlur('password')}
             isValid={passwordRegex.test(formData.password)}
             error={fieldErrors.password}
             showStrength={true}
-            autoComplete="off"
             required
           />
+
           <FormInput
             label="Confirm Password"
             name="confirmPassword"
@@ -355,25 +316,26 @@ const Register = () => {
             onBlur={() => handleBlur('confirmPassword')}
             isValid={formData.confirmPassword !== '' && formData.password === formData.confirmPassword}
             error={fieldErrors.confirmPassword}
-            autoComplete="off"
             required
           />
 
-          <button type="submit" className="btn-auth mt-4" disabled={loading}>
+          <button type="submit" className="sa-submit-btn" disabled={loading}>
             {loading ? 'Creating Account...' : (
-              <>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 Register <UserPlus size={18} />
-              </>
+              </span>
             )}
           </button>
         </form>
-        
-        <p className="auth-footer">
-          Already have an account? <Link to="/admin/login">Login</Link>
-        </p>
+
+        <div className="sa-auth-footer">
+          <p>
+            Already have an account? <span className="sa-link" onClick={() => navigate('/superadmin/login')}>Login here</span>
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default SuperAdminRegister;

@@ -34,7 +34,7 @@ exports.getMachines = asyncHandler(async (req, res, next) => {
   let allMachines = [];
   plants.forEach(p => {
     const pMachines = p.machines.map(m => ({
-      ...m.toObject(),
+      ...m,
       plantName: p.plantName,
       plantId: p._id
     }));
@@ -167,8 +167,8 @@ exports.deleteMachine = asyncHandler(async (req, res, next) => {
     deleterModel: req.user.role === 'superadmin' ? 'SuperAdmin' : 'Admin'
   });
 
-  // Remove from plant
-  machine.remove();
+  // Remove from plant machines array
+  plant.machines.pull(machine._id);
   await plant.save();
 
   // Send notification to the Admin if deleted by SuperAdmin

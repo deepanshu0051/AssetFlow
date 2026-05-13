@@ -48,10 +48,10 @@
 
 /* Dark Mode Overrides */
 [data-theme="dark"] {
-  --bg-main: #020617;
-  --bg-card: #0f172a;
-  --bg-sidebar: #0f172a;
-  --bg-surface: #1e293b;
+  --bg-main: #06080f;
+  --bg-card: #0d111c;
+  --bg-sidebar: #080a12;
+  --bg-surface: #121622;
   --text-main: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
@@ -66,12 +66,12 @@
   --info-bg: rgba(59, 130, 246, 0.2);
 
   /* Scrollbar - Dark */
-  --scrollbar-thumb: #334155;
-  --scrollbar-track: #0f172a;
+  --scrollbar-thumb: #1e293b;
+  --scrollbar-track: #06080f;
   
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.6);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.8);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.9);
 }
 
 /* Global Transitions for Theme Switching */

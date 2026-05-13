@@ -25,12 +25,11 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    password: ''
+    name: user?.name || ''
   });
 
   useEffect(() => {
-    if (user) setFormData({ name: user.name, password: '' });
+    if (user) setFormData({ name: user.name });
   }, [user]);
 
   const handleLogout = () => {
@@ -114,12 +113,6 @@ const Profile = () => {
               )}
             </div>
 
-            {isEditing && (
-              <div className="info-field-group">
-                <span className="field-label"><UserIcon size={14} /> New Password (Optional)</span>
-                <input type="password" name="password" placeholder="Leave blank to keep current" value={formData.password} onChange={handleChange} className="profile-input" />
-              </div>
-            )}
 
             <div className="info-field-group">
               <span className="field-label"><Mail size={14} /> Email Address</span>

@@ -18,9 +18,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, user } = useAuth();
 
-  // Redirect to dashboard if already logged in
+  // Redirect to correct dashboard if already logged in
   if (isAuthenticated && user) {
-    return <Navigate to={user.role === 'superadmin' ? '/superadmin/dashboard' : '/admin/dashboard'} replace />;
+    if (user.role === 'superadmin') {
+      return <Navigate to="/superadmin/dashboard" replace />;
+    }
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
@@ -115,7 +118,7 @@ const Login = () => {
     try {
       const res = await login(email, password, 'admin');
       if (res.success) {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else {
         if (res.errors) {
           const serverErrors = {};

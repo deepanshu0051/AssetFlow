@@ -27,7 +27,9 @@ const connectDB = async () => {
       logger.error(`Atlas Connection Attempt ${retries} failed: ${error.message}`);
       
       if (error.message.includes('SSL') || error.message.includes('serverSelectionTimeout')) {
-        logger.warn('TIP: If you are seeing SSL or timeout errors, ensure your current IP is whitelisted in MongoDB Atlas dashboard.');
+        if (retries === 1) {
+          logger.warn('TIP: If you are seeing SSL or timeout errors, ensure your current IP is whitelisted in MongoDB Atlas dashboard.');
+        }
       }
 
       if (retries >= maxRetries) {

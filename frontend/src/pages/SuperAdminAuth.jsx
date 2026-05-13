@@ -25,7 +25,10 @@ const SuperAdminAuth = () => {
 
   // Redirect to dashboard if already logged in
   if (isAuthenticated && user) {
-    return <Navigate to={user.role === 'superadmin' ? '/superadmin/dashboard' : '/admin/dashboard'} replace />;
+    if (user.role === 'superadmin') {
+      return <Navigate to="/superadmin/dashboard" replace />;
+    }
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
@@ -118,7 +121,7 @@ const SuperAdminAuth = () => {
       const res = await login(loginData.email, loginData.password, 'superadmin');
       if (res.success) {
         addToast('Welcome back, Super Admin!', 'success');
-        navigate('/superadmin/dashboard');
+        navigate('/superadmin/dashboard', { replace: true });
       } else {
         setError(res.message || 'Invalid Super Admin credentials');
         addToast(res.message || 'Login failed', 'error');
@@ -206,6 +209,11 @@ const SuperAdminAuth = () => {
           </button>
         </form>
 
+        <div className="sa-auth-footer">
+          <p>
+            New user? <span className="sa-link" onClick={() => navigate('/superadmin/register')}>Register here</span>
+          </p>
+        </div>
       </div>
     </div>
   );
