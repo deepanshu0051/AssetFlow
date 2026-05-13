@@ -9,7 +9,9 @@ const errorHandler = require('./middleware/errorHandler');
 const { requestLogger: logger } = require('./middleware/logger');
 
 // Load env vars
-dotenv.config({ path: '../.env' });
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: '../.env' });
+}
 
 const machineRoutes = require('./routes/machineRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -135,4 +137,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
