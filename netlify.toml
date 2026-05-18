@@ -3,9 +3,6 @@
   publish = "frontend/dist"
   functions = "backend/functions"
 
-[build.environment]
-  NODE_ENV = "production"
-
 [functions]
   node_bundler = "esbuild"
 
