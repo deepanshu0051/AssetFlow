@@ -132,9 +132,8 @@ apiRouter.get('/', (req, res) => {
   res.json({ success: true, message: 'Welcome to AssetFlow API' });
 });
 
-// Mount the API Router on both local and Netlify function paths
-// We use an array for flexibility and ensure trailing slashes are handled
-app.use(['/api', '/.netlify/functions/api'], apiRouter);
+// Mount the API Router directly on /api
+app.use('/api', apiRouter);
 
 // Catch-all for API router - must be JSON to avoid falling through to SPA index.html
 apiRouter.use((req, res) => {

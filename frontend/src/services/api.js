@@ -8,7 +8,8 @@ const getApiBaseUrl = () => {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
     return `http://${hostname}:5000/api`;
   }
-  return '/api';
+  // Production fallback directly to dedicated Render backend
+  return 'https://assetflow-fpr8.onrender.com/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -60,9 +61,9 @@ api.interceptors.response.use(
       }
     }
 
-    // Check if the error response is actually an HTML page (Netlify 404 fallback)
+    // Check if the error response is actually an HTML page (Render 404 or hosting issue)
     if (typeof error.response?.data === 'string' && error.response.data.includes('<!DOCTYPE html>')) {
-      return Promise.reject('API Configuration Error: The server returned an HTML page instead of JSON. This typically means the Netlify API redirect is failing.');
+      return Promise.reject('API Configuration Error: The server returned an HTML page instead of JSON. Please ensure your Render backend service is live and running at https://assetflow-fpr8.onrender.com/api.');
     }
 
     return Promise.reject(error.response?.data || error.message);
