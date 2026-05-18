@@ -47,7 +47,7 @@ const connectDB = async () => {
           }
         } else {
           logger.error('Max retries reached in Production.');
-          throw new Error(`Failed to connect to MongoDB Atlas after ${maxRetries} attempts. Ensure MONGODB_URI is set correctly.`);
+          throw new Error(`Failed to connect to MongoDB Atlas after ${maxRetries} attempts. If this error persists on Render/Netlify, please ensure that you have whitelisted the IP '0.0.0.0/0' (Allow Access from Anywhere) in your MongoDB Atlas Security -> Network Access dashboard to allow dynamic cloud hosting IP routing.`);
         }
       } else {
         await new Promise(resolve => setTimeout(resolve, 2000));
