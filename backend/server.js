@@ -137,7 +137,7 @@ apiRouter.get('/', (req, res) => {
 app.use(['/api', '/.netlify/functions/api'], apiRouter);
 
 // Catch-all for API router - must be JSON to avoid falling through to SPA index.html
-apiRouter.use('*', (req, res) => {
+apiRouter.use((req, res) => {
   res.status(404).json({ 
     success: false, 
     message: `API endpoint not found: ${req.originalUrl}` 
