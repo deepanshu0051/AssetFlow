@@ -27,6 +27,8 @@ const Register = () => {
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [isAdminAccessIdCorrect, setIsAdminAccessIdCorrect] = useState(false);
+  const [isAdminAccessIdValidating, setIsAdminAccessIdValidating] = useState(false);
   const navigate = useNavigate();
   const { register, isAuthenticated, user } = useAuth();
 
@@ -83,6 +85,7 @@ const Register = () => {
         break;
       case 'adminAccessId':
         if (!value.trim()) errorMsg = 'Admin Access ID is required';
+        else if (!isAdminAccessIdCorrect && !isAdminAccessIdValidating) errorMsg = 'Invalid Admin Access ID';
         break;
       default:
         break;
@@ -90,17 +93,85 @@ const Register = () => {
     return errorMsg;
   };
 
+  // Debounced real-time validation for Admin Access ID
+  useEffect(() => {
+    const key = formData.adminAccessId.trim();
+    if (!key) {
+      setIsAdminAccessIdCorrect(false);
+      setIsAdminAccessIdValidating(false);
+      return;
+    }
+
+    setIsAdminAccessIdValidating(true);
+    setIsAdminAccessIdCorrect(false);
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await apiService.validateKey({ key, type: 'admin' });
+        setIsAdminAccessIdValidating(false);
+        if (res.success && res.isValid) {
+          setIsAdminAccessIdCorrect(true);
+          setFieldErrors(prev => ({ ...prev, adminAccessId: '' }));
+        } else {
+          setIsAdminAccessIdCorrect(false);
+          if (touched.adminAccessId) {
+            setFieldErrors(prev => ({ ...prev, adminAccessId: 'Invalid Admin Access ID' }));
+          }
+        }
+      } catch (err) {
+        setIsAdminAccessIdValidating(false);
+        setIsAdminAccessIdCorrect(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.adminAccessId, touched.adminAccessId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    const err = validateField(name, value);
-    setFieldErrors(prev => ({ ...prev, [name]: touched[name] ? err : '' }));
+    const finalValue = name === 'email' ? value.toLowerCase() : value;
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
+    
+    if (name === 'adminAccessId') {
+      setIsAdminAccessIdCorrect(false);
+      if (!value.trim()) {
+        setFieldErrors(prev => ({ ...prev, adminAccessId: '' }));
+      }
+    } else {
+      const err = validateField(name, finalValue);
+      setFieldErrors(prev => ({ ...prev, [name]: touched[name] ? err : '' }));
+    }
   };
 
-  const handleBlur = (name) => {
+  const handleBlur = async (name) => {
     setTouched(prev => ({ ...prev, [name]: true }));
-    const err = validateField(name, formData[name]);
-    setFieldErrors(prev => ({ ...prev, [name]: err }));
+    
+    if (name === 'adminAccessId') {
+      const value = formData.adminAccessId.trim();
+      if (!value) {
+        setFieldErrors(prev => ({ ...prev, adminAccessId: 'Admin Access ID is required' }));
+        return;
+      }
+      setIsAdminAccessIdValidating(true);
+      try {
+        const res = await apiService.validateKey({ key: value, type: 'admin' });
+        setIsAdminAccessIdValidating(false);
+        if (res.success && res.isValid) {
+          setIsAdminAccessIdCorrect(true);
+          setFieldErrors(prev => ({ ...prev, adminAccessId: '' }));
+        } else {
+          setIsAdminAccessIdCorrect(false);
+          setFieldErrors(prev => ({ ...prev, adminAccessId: 'Invalid Admin Access ID' }));
+        }
+      } catch (err) {
+        setIsAdminAccessIdValidating(false);
+        setIsAdminAccessIdCorrect(false);
+        setFieldErrors(prev => ({ ...prev, adminAccessId: 'Validation failed' }));
+      }
+    } else {
+      const err = validateField(name, formData[name]);
+      setFieldErrors(prev => ({ ...prev, [name]: err }));
+    }
   };
 
   const validateForm = () => {
@@ -109,6 +180,9 @@ const Register = () => {
       const err = validateField(key, formData[key]);
       if (err) errors[key] = err;
     });
+    if (formData.adminAccessId && !isAdminAccessIdCorrect) {
+      errors.adminAccessId = 'Invalid Admin Access ID';
+    }
     setFieldErrors(errors);
     setTouched({
       name: true,
@@ -125,10 +199,9 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-    
-    if (!isEmailVerified) {
-      setError('Please verify your email first');
+    const key = formData.adminAccessId.trim();
+    if (!key) {
+      setFieldErrors(prev => ({ ...prev, adminAccessId: 'Admin Access ID is required' }));
       return;
     }
     
@@ -136,6 +209,27 @@ const Register = () => {
     setError('');
 
     try {
+      // Synchronous/immediate validation check right before submit
+      const valRes = await apiService.validateKey({ key, type: 'admin' });
+      if (!valRes.success || !valRes.isValid) {
+        setIsAdminAccessIdCorrect(false);
+        setFieldErrors(prev => ({ ...prev, adminAccessId: 'Invalid Admin Access ID' }));
+        setLoading(false);
+        return;
+      }
+      setIsAdminAccessIdCorrect(true);
+      
+      if (!validateForm()) {
+        setLoading(false);
+        return;
+      }
+      
+      if (!isEmailVerified) {
+        setError('Please verify your email first');
+        setLoading(false);
+        return;
+      }
+
       const res = await register(formData);
       if (res.success) {
         setSuccess(true);
@@ -155,7 +249,8 @@ const Register = () => {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      const msg = err?.message || (typeof err === 'string' ? err : 'An unexpected error occurred. Please try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -327,7 +422,7 @@ const Register = () => {
             value={formData.adminAccessId}
             onChange={handleChange}
             onBlur={() => handleBlur('adminAccessId')}
-            isValid={formData.adminAccessId.trim().length > 0}
+            isValid={isAdminAccessIdCorrect}
             error={fieldErrors.adminAccessId}
             required
           />

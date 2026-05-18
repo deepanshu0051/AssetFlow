@@ -43,11 +43,11 @@ const connectDB = async () => {
             return;
           } catch (fallbackError) {
             logger.error(`Failed to start Local Mock Database: ${fallbackError.message}`);
-            process.exit(1);
+            throw new Error(`Failed to start Local Mock Database: ${fallbackError.message}`);
           }
         } else {
-          logger.error('Max retries reached in Production. Exiting.');
-          process.exit(1);
+          logger.error('Max retries reached in Production.');
+          throw new Error(`Failed to connect to MongoDB Atlas after ${maxRetries} attempts. Ensure MONGODB_URI is set correctly.`);
         }
       } else {
         await new Promise(resolve => setTimeout(resolve, 2000));

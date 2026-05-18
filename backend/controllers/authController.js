@@ -10,27 +10,10 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = asyncHandler(async (req, res, next) => {
-  const { name, email, password, specialAdminId, adminAccessId, plantLocation } = req.body;
+  const { name, password, role, specialAdminId, adminAccessId, plantLocation, mobileNumber } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
-  // If specialAdminId is provided -> Attempt Super Admin Registration
-  if (specialAdminId !== undefined || req.body.role === 'superadmin') {
-    if (!specialAdminId || specialAdminId !== process.env.SUPER_ADMIN_KEY) {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized Super Admin Registration: Invalid Special Admin ID'
-      });
-    }
-
-    // Register as Super Admin
-    const superAdmin = await SuperAdmin.create({ name, email, password });
-    
-    // Delete the OTP record after successful registration
-    await OTP.deleteOne({ _id: otpRecord._id });
-    
-    return sendTokenResponse(superAdmin, 201, res);
-  }
-
-  // Basic empty field validation
+  // 1. Basic field validation
   if (!name || !email || !password) {
     return res.status(400).json({
       success: false,
@@ -38,16 +21,7 @@ exports.register = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Verify Email via OTP check
-  const otpRecord = await OTP.findOne({ email, isVerified: true });
-  if (!otpRecord) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please verify your email via OTP before registering'
-    });
-  }
-
-  // Strict Validation Rules
+  // 2. Strict Format Validation
   const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
 
@@ -65,43 +39,89 @@ exports.register = asyncHandler(async (req, res, next) => {
     });
   }
 
-
-  // Otherwise, register as regular Admin
-  if (!adminAccessId || adminAccessId !== process.env.ADMIN_ACCESS_ID) {
-    return res.status(403).json({
-      success: false,
-      message: 'Unauthorized Admin Registration: Invalid Admin Access ID'
-    });
-  }
-
-  if (!plantLocation) {
+  // 3. Verify Email via OTP check (Required for ALL roles)
+  const otpRecord = await OTP.findOne({ email, isVerified: true });
+  if (!otpRecord) {
     return res.status(400).json({
       success: false,
-      message: 'Please provide a plant location'
+      message: 'Please verify your email via OTP before registering'
     });
   }
 
-  const { mobileNumber } = req.body;
-  if (!mobileNumber || !/^\d{10}$/.test(mobileNumber)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please provide a valid 10-digit mobile number'
-    });
-  }
+  // 4. Role-Specific Logic
+  if (role === 'superadmin' || specialAdminId !== undefined) {
+    // Attempt Super Admin Registration
+    if (!specialAdminId || specialAdminId !== process.env.SUPER_ADMIN_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized Super Admin Registration: Invalid Special Admin ID'
+      });
+    }
 
-  const admin = await Admin.create({ name, email, password, plantLocation, mobileNumber });
-  
-  // Delete the OTP record after successful registration
-  await OTP.deleteOne({ _id: otpRecord._id });
-  
-  sendTokenResponse(admin, 201, res);
+    // Check if Super Admin already exists
+    const existingSuperAdmin = await SuperAdmin.findOne({ email });
+    if (existingSuperAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Super Admin with this email already exists'
+      });
+    }
+
+    // Create Super Admin
+    const superAdmin = await SuperAdmin.create({ name, email, password });
+    
+    // Cleanup OTP
+    await OTP.deleteOne({ _id: otpRecord._id });
+    
+    return sendTokenResponse(superAdmin, 201, res);
+  } else {
+    // Attempt regular Admin Registration
+    if (!adminAccessId || adminAccessId !== process.env.ADMIN_ACCESS_ID) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized Admin Registration: Invalid Admin Access ID'
+      });
+    }
+
+    if (!plantLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a plant location'
+      });
+    }
+
+    if (!mobileNumber || !/^\d{10}$/.test(mobileNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid 10-digit mobile number'
+      });
+    }
+
+    // Check if Admin already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin with this email already exists'
+      });
+    }
+
+    // Create Admin
+    const admin = await Admin.create({ name, email, password, plantLocation, mobileNumber });
+    
+    // Cleanup OTP
+    await OTP.deleteOne({ _id: otpRecord._id });
+    
+    return sendTokenResponse(admin, 201, res);
+  }
 });
 
 // @desc    Send OTP to email
 // @route   POST /api/auth/send-otp
 // @access  Public
 exports.sendOTP = asyncHandler(async (req, res, next) => {
-  const { email, role } = req.body;
+  const { role } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
   if (!email || !role) {
     return res.status(400).json({
@@ -167,7 +187,8 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 exports.verifyOTP = asyncHandler(async (req, res, next) => {
-  const { email, role, otp } = req.body;
+  const { role, otp } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
   if (!email || !role || !otp) {
     return res.status(400).json({
@@ -214,7 +235,8 @@ exports.verifyOTP = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password, role } = req.body;
+  const { password, role } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
   if (!email || !password || !role) {
     return res.status(400).json({
@@ -334,7 +356,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/forgotpassword
 // @access  Public
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-  const { email, role } = req.body;
+  const { role } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
   if (!email) {
     return res.status(400).json({
@@ -447,5 +470,36 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: 'Password reset successful'
+  });
+});
+
+// @desc    Validate access/secret keys in real-time
+// @route   POST /api/auth/validate-key
+// @access  Public
+exports.validateKey = asyncHandler(async (req, res, next) => {
+  const { key, type } = req.body;
+
+  if (!key || !type) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide key and type'
+    });
+  }
+
+  let isValid = false;
+  if (type === 'superadmin') {
+    isValid = key === process.env.SUPER_ADMIN_KEY;
+  } else if (type === 'admin') {
+    isValid = key === process.env.ADMIN_ACCESS_ID;
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid key type specified'
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    isValid
   });
 });

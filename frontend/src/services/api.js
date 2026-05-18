@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (import.meta.env.DEV) {
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    return `http://${hostname}:5000/api`;
+  }
+  return '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -48,6 +59,12 @@ api.interceptors.response.use(
         window.location.href = role === 'superadmin' ? '/superadmin/login' : '/admin/login';
       }
     }
+
+    // Check if the error response is actually an HTML page (Netlify 404 fallback)
+    if (typeof error.response?.data === 'string' && error.response.data.includes('<!DOCTYPE html>')) {
+      return Promise.reject('API Configuration Error: The server returned an HTML page instead of JSON. This typically means the Netlify API redirect is failing.');
+    }
+
     return Promise.reject(error.response?.data || error.message);
   }
 );
@@ -63,6 +80,7 @@ const apiService = {
   getUsers: () => api.get('/auth/users'),
   sendOTP: (data) => api.post('/auth/send-otp', data),
   verifyOTP: (data) => api.post('/auth/verify-otp', data),
+  validateKey: (data) => api.post('/auth/validate-key', data),
 
   // Machines (Hierarchical/Embedded)
   getMachines: (params) => api.get('/machines', { params }),

@@ -48,10 +48,11 @@ const ForgotPassword = ({ role = 'admin' }) => {
         setResetToken(res.resetToken);
       }
     } catch (err) {
-      if (err.message === 'Email not registered') {
+      const msg = err?.message || (typeof err === 'string' ? err : 'Failed to request reset');
+      if (msg === 'Email not registered') {
         setFieldErrors({ email: 'Email not registered' });
       } else {
-        setError(err.message || 'Failed to request reset');
+        setError(msg);
       }
     }
     setLoading(false);
@@ -77,7 +78,7 @@ const ForgotPassword = ({ role = 'admin' }) => {
               placeholder="name@gmail.com"
               value={email}
               onChange={(e) => {
-                setEmail(e.target.value);
+                setEmail(e.target.value.toLowerCase());
                 if (fieldErrors.email) setFieldErrors({});
               }}
               isValid={emailRegex.test(email)}

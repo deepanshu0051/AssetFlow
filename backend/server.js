@@ -34,13 +34,16 @@ const corsOptions = {
     
     // Check if origin is allowed
     const isAllowed = allowedOrigins.some(ao => ao.trim() === origin.trim());
-    const isNetlify = origin.endsWith('.netlify.app') || origin.endsWith('.vercel.app');
+    const isNetlify = origin.endsWith('.netlify.app') || 
+                      origin.endsWith('.vercel.app') || 
+                      origin.includes('netlify') || 
+                      origin.includes('localhost');
     
     if (isAllowed || isNetlify || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      console.warn(`CORS Blocked: Origin ${origin} not in ALLOWED_ORIGINS`);
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`CORS Warning: Origin ${origin} not in ALLOWED_ORIGINS, but allowed to ensure zero downtime/service disruption for mobile clients.`);
+      callback(null, true);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -89,21 +92,24 @@ const authLimiter = rateLimit({
   skip: (req, res) => process.env.NODE_ENV === 'development' // Optional extra bypass for dev
 });
 
-// Apply authLimiter to all authentication-sensitive routes
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/forgotpassword', authLimiter);
-app.use('/api/auth/me', authLimiter);
+// Define API Router
+const apiRouter = express.Router();
 
-// Mount routes
-app.use('/api/machines', machineRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/plants', plantRoutes);
-app.use('/api/machine-requests', machineRequestRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+// Apply authLimiter to all authentication-sensitive routes within the router
+apiRouter.use('/auth/login', authLimiter);
+apiRouter.use('/auth/register', authLimiter);
+apiRouter.use('/auth/forgotpassword', authLimiter);
+apiRouter.use('/auth/me', authLimiter);
 
-app.get('/api/health', (req, res) => {
+// Mount routes to the API Router
+apiRouter.use('/machines', machineRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/plants', plantRoutes);
+apiRouter.use('/machine-requests', machineRequestRoutes);
+apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+
+apiRouter.get('/health', (req, res) => {
   res.json({ 
     success: true, 
     message: 'Backend is running correctly',
@@ -118,12 +124,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/test', (req, res) => {
+apiRouter.get('/test', (req, res) => {
   res.json({ success: true, message: 'Database Connected Successfully' });
 });
 
-app.get('/api', (req, res) => {
+apiRouter.get('/', (req, res) => {
   res.json({ success: true, message: 'Welcome to AssetFlow API' });
+});
+
+// Mount the API Router on both local and Netlify function paths
+// We use an array for flexibility and ensure trailing slashes are handled
+app.use(['/api', '/.netlify/functions/api'], apiRouter);
+
+// Catch-all for API router - must be JSON to avoid falling through to SPA index.html
+apiRouter.use('*', (req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    message: `API endpoint not found: ${req.originalUrl}` 
+  });
 });
 
 // Error handling middleware

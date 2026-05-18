@@ -51,7 +51,7 @@ const ResetPassword = ({ role = 'admin' }) => {
         navigate(loginLink);
       }
     } catch (err) {
-      setError(err.message || 'Failed to reset password');
+      setError(err?.message || (typeof err === 'string' ? err : 'Failed to reset password'));
     }
     setLoading(false);
   };

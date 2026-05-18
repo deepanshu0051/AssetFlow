@@ -27,6 +27,14 @@
   z-index: 10000; /* Above everything */
 }
 
+@media (max-width: 768px) {
+  .auth-theme-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+}
+
 .auth-card {
   width: 100%;
   max-width: 520px;

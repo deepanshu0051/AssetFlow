@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -26,6 +26,8 @@ const SuperAdminRegister = () => {
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [isSpecialAdminIdCorrect, setIsSpecialAdminIdCorrect] = useState(false);
+  const [isSpecialAdminIdValidating, setIsSpecialAdminIdValidating] = useState(false);
 
   const { register, isAuthenticated, user } = useAuth();
   const { addToast } = useToast();
@@ -63,6 +65,7 @@ const SuperAdminRegister = () => {
         break;
       case 'specialAdminId':
         if (!value.trim()) errorMsg = 'Super Admin Key is required';
+        else if (!isSpecialAdminIdCorrect && !isSpecialAdminIdValidating) errorMsg = 'Invalid Super Admin Key';
         break;
       default:
         break;
@@ -70,17 +73,85 @@ const SuperAdminRegister = () => {
     return errorMsg;
   };
 
+  // Debounced real-time validation for Super Admin Key
+  useEffect(() => {
+    const key = formData.specialAdminId.trim();
+    if (!key) {
+      setIsSpecialAdminIdCorrect(false);
+      setIsSpecialAdminIdValidating(false);
+      return;
+    }
+
+    setIsSpecialAdminIdValidating(true);
+    setIsSpecialAdminIdCorrect(false);
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await api.validateKey({ key, type: 'superadmin' });
+        setIsSpecialAdminIdValidating(false);
+        if (res.success && res.isValid) {
+          setIsSpecialAdminIdCorrect(true);
+          setFieldErrors(prev => ({ ...prev, specialAdminId: '' }));
+        } else {
+          setIsSpecialAdminIdCorrect(false);
+          if (touched.specialAdminId) {
+            setFieldErrors(prev => ({ ...prev, specialAdminId: 'Invalid Super Admin Key' }));
+          }
+        }
+      } catch (err) {
+        setIsSpecialAdminIdValidating(false);
+        setIsSpecialAdminIdCorrect(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.specialAdminId, touched.specialAdminId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    const err = validateField(name, value);
-    setFieldErrors(prev => ({ ...prev, [name]: touched[name] ? err : '' }));
+    const finalValue = name === 'email' ? value.toLowerCase() : value;
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
+    
+    if (name === 'specialAdminId') {
+      setIsSpecialAdminIdCorrect(false);
+      if (!value.trim()) {
+        setFieldErrors(prev => ({ ...prev, specialAdminId: '' }));
+      }
+    } else {
+      const err = validateField(name, finalValue);
+      setFieldErrors(prev => ({ ...prev, [name]: touched[name] ? err : '' }));
+    }
   };
 
-  const handleBlur = (name) => {
+  const handleBlur = async (name) => {
     setTouched(prev => ({ ...prev, [name]: true }));
-    const err = validateField(name, formData[name]);
-    setFieldErrors(prev => ({ ...prev, [name]: err }));
+    
+    if (name === 'specialAdminId') {
+      const value = formData.specialAdminId.trim();
+      if (!value) {
+        setFieldErrors(prev => ({ ...prev, specialAdminId: 'Super Admin Key is required' }));
+        return;
+      }
+      setIsSpecialAdminIdValidating(true);
+      try {
+        const res = await api.validateKey({ key: value, type: 'superadmin' });
+        setIsSpecialAdminIdValidating(false);
+        if (res.success && res.isValid) {
+          setIsSpecialAdminIdCorrect(true);
+          setFieldErrors(prev => ({ ...prev, specialAdminId: '' }));
+        } else {
+          setIsSpecialAdminIdCorrect(false);
+          setFieldErrors(prev => ({ ...prev, specialAdminId: 'Invalid Super Admin Key' }));
+        }
+      } catch (err) {
+        setIsSpecialAdminIdValidating(false);
+        setIsSpecialAdminIdCorrect(false);
+        setFieldErrors(prev => ({ ...prev, specialAdminId: 'Validation failed' }));
+      }
+    } else {
+      const err = validateField(name, formData[name]);
+      setFieldErrors(prev => ({ ...prev, [name]: err }));
+    }
   };
 
   const validateForm = () => {
@@ -89,6 +160,9 @@ const SuperAdminRegister = () => {
       const err = validateField(key, formData[key]);
       if (err) errors[key] = err;
     });
+    if (formData.specialAdminId && !isSpecialAdminIdCorrect) {
+      errors.specialAdminId = 'Invalid Super Admin Key';
+    }
     setFieldErrors(errors);
     setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
     return Object.keys(errors).length === 0;
@@ -97,11 +171,9 @@ const SuperAdminRegister = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-    
-    if (!isEmailVerified) {
-      setError('Please verify your email first');
-      addToast('Please verify your email first', 'error');
+    const key = formData.specialAdminId.trim();
+    if (!key) {
+      setFieldErrors(prev => ({ ...prev, specialAdminId: 'Super Admin Key is required' }));
       return;
     }
     
@@ -109,6 +181,28 @@ const SuperAdminRegister = () => {
     setError('');
 
     try {
+      // Synchronous/immediate validation check right before submit
+      const valRes = await api.validateKey({ key, type: 'superadmin' });
+      if (!valRes.success || !valRes.isValid) {
+        setIsSpecialAdminIdCorrect(false);
+        setFieldErrors(prev => ({ ...prev, specialAdminId: 'Invalid Super Admin Key' }));
+        setLoading(false);
+        return;
+      }
+      setIsSpecialAdminIdCorrect(true);
+
+      if (!validateForm()) {
+        setLoading(false);
+        return;
+      }
+      
+      if (!isEmailVerified) {
+        setError('Please verify your email first');
+        addToast('Please verify your email first', 'error');
+        setLoading(false);
+        return;
+      }
+      
       // We pass role: 'superadmin' so the backend knows to use SuperAdmin model
       const res = await register({ ...formData, role: 'superadmin' });
       if (res.success) {
@@ -122,8 +216,9 @@ const SuperAdminRegister = () => {
         addToast(res.message || 'Registration failed', 'error');
       }
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred');
-      addToast(err.message || 'An error occurred', 'error');
+      const msg = err?.message || (typeof err === 'string' ? err : 'An unexpected error occurred');
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -287,7 +382,7 @@ const SuperAdminRegister = () => {
             value={formData.specialAdminId}
             onChange={handleChange}
             onBlur={() => handleBlur('specialAdminId')}
-            isValid={formData.specialAdminId.length > 0}
+            isValid={isSpecialAdminIdCorrect}
             error={fieldErrors.specialAdminId}
             required
           />

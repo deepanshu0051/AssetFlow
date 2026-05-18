@@ -42,7 +42,7 @@ const Login = () => {
   };
 
   const handleEmailChange = (e) => {
-    const val = e.target.value;
+    const val = e.target.value.toLowerCase();
     setEmail(val);
     const err = validateField('email', val);
     setFieldErrors(prev => ({ ...prev, email: touched.email ? err : '' }));
@@ -132,7 +132,8 @@ const Login = () => {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      const msg = err?.message || (typeof err === 'string' ? err : 'An unexpected error occurred. Please try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

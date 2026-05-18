@@ -22,9 +22,17 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Specific styling for auth pages - Fixed top-right as requested */
+/* Specific styling for auth pages - Absolute on mobile to scroll with content */
 .auth-theme-wrapper .theme-toggle {
   position: fixed;
   top: 24px;
   right: 24px;
+}
+
+@media (max-width: 768px) {
+  .auth-theme-wrapper .theme-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
 }

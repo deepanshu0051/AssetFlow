@@ -8,7 +8,8 @@ const {
   forgotPassword,
   resetPassword,
   sendOTP,
-  verifyOTP
+  verifyOTP,
+  validateKey
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -29,6 +30,7 @@ router.put('/resetpassword/:resettoken', resetPassword);
 router.post('/send-otp', sendOTP);
 router.post('/resend-otp', sendOTP);
 router.post('/verify-otp', verifyOTP);
+router.post('/validate-key', validateKey);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.get('/users', protect, authorize('superadmin'), getUsers);

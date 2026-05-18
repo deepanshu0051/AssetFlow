@@ -47,8 +47,9 @@ const SuperAdminAuth = () => {
 
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
-    setLoginData(prev => ({ ...prev, [name]: value }));
-    const err = validateLoginField(name, value);
+    const finalValue = name === 'email' ? value.toLowerCase() : value;
+    setLoginData(prev => ({ ...prev, [name]: finalValue }));
+    const err = validateLoginField(name, finalValue);
     setFieldErrors(prev => ({ ...prev, [name]: loginTouched[name] ? err : '' }));
   };
 
@@ -127,8 +128,9 @@ const SuperAdminAuth = () => {
         addToast(res.message || 'Login failed', 'error');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      addToast('An error occurred. Please try again.', 'error');
+      const msg = err?.message || (typeof err === 'string' ? err : 'An unexpected error occurred. Please try again.');
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setLoading(false);
     }

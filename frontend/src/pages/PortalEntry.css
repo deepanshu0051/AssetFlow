@@ -136,6 +136,12 @@
 }
 
 @media (max-width: 600px) {
+  .portal-container {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    padding: 60px 20px;
+  }
   .portal-title {
     font-size: 2.5rem;
   }
