@@ -3,10 +3,11 @@ import { X, ShieldCheck, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import './OTPModal.css';
 
 const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpValue, setOtpValue] = useState('');
   const [timer, setTimer] = useState(60);
   const [error, setError] = useState('');
-  const inputRefs = useRef([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     let interval;
@@ -20,30 +21,20 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setOtp(['', '', '', '', '', '']);
+      setOtpValue('');
       setTimer(60);
       setError('');
-      // Focus first input after a small delay for modal animation
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      setIsFocused(true);
+      // Delay focus slightly to allow modal fade-in animation
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [isOpen]);
 
-  const handleChange = (index, value) => {
-    if (isNaN(value)) return;
-    
-    const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1].focus();
-    }
-  };
-
-  const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+  const handleInputChange = (e) => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    if (val.length <= 6) {
+      setOtpValue(val);
+      setError('');
     }
   };
 
@@ -52,8 +43,8 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
     const success = await onResend();
     if (success) {
       setTimer(60);
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0].focus();
+      setOtpValue('');
+      setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       setError('Failed to resend OTP. Please try again.');
     }
@@ -61,7 +52,6 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const otpValue = otp.join('');
     if (otpValue.length !== 6) {
       setError('Please enter all 6 digits');
       return;
@@ -78,7 +68,7 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
   return (
     <div className="otp-modal-overlay">
       <div className="otp-modal-content card fade-in">
-        <button className="otp-close-btn" onClick={onClose}>
+        <button className="otp-close-btn" type="button" onClick={onClose} aria-label="Close modal">
           <X size={20} />
         </button>
 
@@ -98,20 +88,40 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading }) => {
         )}
 
         <form onSubmit={handleSubmit} className="otp-form">
-          <div className="otp-input-container">
-            {otp.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={(el) => (inputRefs.current[idx] = el)}
-                type="text"
-                maxLength="1"
-                value={digit}
-                onChange={(e) => handleChange(idx, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(idx, e)}
-                className={error ? 'error' : ''}
-                autoFocus={idx === 0}
-              />
-            ))}
+          <div className="otp-input-wrapper-relative">
+            {/* Invisible native numeric input to process typing natively on mobile keyboards */}
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={otpValue}
+              onChange={handleInputChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              autoComplete="one-time-code"
+              className="otp-hidden-native-input"
+            />
+            
+            {/* Presentational stylized indicator boxes */}
+            <div className="otp-input-container" onClick={() => inputRef.current?.focus()}>
+              {Array.from({ length: 6 }).map((_, idx) => {
+                const digit = otpValue[idx] || '';
+                const isCurrent = idx === otpValue.length;
+                const isLast = idx === 5 && otpValue.length === 6;
+                const isSelected = isFocused && (isCurrent || isLast);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`otp-digit-box ${error ? 'error' : ''} ${isSelected ? 'focused' : ''} ${digit ? 'filled' : ''}`}
+                  >
+                    {digit}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="otp-timer-container">

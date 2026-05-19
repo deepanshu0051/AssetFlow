@@ -61,36 +61,65 @@
   line-height: 1.5;
 }
 
+.otp-input-wrapper-relative {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.otp-hidden-native-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 2;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+}
+
 .otp-input-container {
   display: flex;
   gap: 10px;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
-.otp-input-container input {
+.otp-digit-box {
   width: 45px;
   height: 52px;
   border: 2px solid var(--border-color);
   border-radius: 12px;
   background: var(--bg-surface);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-main);
   transition: all 0.2s;
-  outline: none;
+  user-select: none;
+  box-sizing: border-box;
 }
 
-.otp-input-container input:focus {
+.otp-digit-box.focused {
   border-color: var(--primary);
   background: var(--bg-card);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.otp-input-container input.error {
+.otp-digit-box.error {
   border-color: var(--danger);
   background: rgba(239, 68, 68, 0.05);
+}
+
+.otp-digit-box.filled {
+  border-color: var(--primary-hover);
 }
 
 .otp-error-banner {
@@ -162,7 +191,7 @@
   .otp-input-container {
     gap: 6px;
   }
-  .otp-input-container input {
+  .otp-digit-box {
     width: 40px;
     height: 48px;
     font-size: 1.25rem;

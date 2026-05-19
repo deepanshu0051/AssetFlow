@@ -245,7 +245,7 @@ const SuperAdminRegister = () => {
       <OTPModal
         isOpen={isOTPModalOpen}
         onClose={() => setIsOTPModalOpen(false)}
-        email={formData.email}
+        email={formData.email.trim()}
         loading={otpLoading}
         onVerify={async (otp) => {
           setOtpLoading(true);
