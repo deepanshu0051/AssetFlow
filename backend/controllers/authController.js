@@ -22,13 +22,13 @@ exports.register = asyncHandler(async (req, res, next) => {
   }
 
   // 2. Strict Format Validation
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
 
   if (!emailRegex.test(email)) {
     return res.status(400).json({
       success: false,
-      message: 'Enter a valid Gmail (lowercase letters required, only one dot allowed, must include at least one letter)'
+      message: 'Enter a valid Gmail address'
     });
   }
 
@@ -246,11 +246,11 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   // Strict Email Validation for login too
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   if (!emailRegex.test(email)) {
     return res.status(400).json({
       success: false,
-      message: 'Enter a valid Gmail (lowercase letters required, only one dot allowed, must include at least one letter)'
+      message: 'Enter a valid Gmail address'
     });
   }
 
@@ -374,11 +374,11 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   }
 
   // Strict Gmail validation
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   if (!emailRegex.test(email)) {
     return res.status(400).json({
       success: false,
-      message: 'Enter a valid gmail'
+      message: 'Enter a valid Gmail address'
     });
   }
 

@@ -42,7 +42,7 @@ const SuperAdminRegister = () => {
   }
 
   const nameRegex = /^[A-Za-z ]+$/;
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
 
   const validateField = (name, value) => {
@@ -271,10 +271,18 @@ const SuperAdminRegister = () => {
         onResend={async () => {
           setOtpLoading(true);
           try {
+            console.log('Dispatching resendOTP request for superadmin:', formData.email);
             const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
-            if (res.success) addToast('New OTP sent to your email', 'success');
-            return res.success;
+            if (res.success) {
+              addToast('New OTP sent to your email', 'success');
+              return true;
+            }
+            addToast(res.message || 'Failed to resend OTP', 'error');
+            return false;
           } catch (err) {
+            const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to resend OTP email.');
+            console.error('Production SuperAdmin OTP Resend Failure:', err);
+            addToast(errMsg, 'error');
             return false;
           } finally {
             setOtpLoading(false);
@@ -351,17 +359,23 @@ const SuperAdminRegister = () => {
                       return;
                     }
                     setOtpLoading(true);
+                    setError('');
                     try {
+                      console.log('Dispatching sendOTP request for superadmin:', formData.email);
                       const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
                       if (res.success) {
                         setIsOTPModalOpen(true);
                         addToast('OTP sent to your email', 'success');
                       } else {
-                        setError(res.message);
-                        addToast(res.message, 'error');
+                        const errMsg = res.message || 'Failed to send OTP';
+                        setError(errMsg);
+                        addToast(errMsg, 'error');
                       }
                     } catch (err) {
-                      addToast('Failed to send OTP', 'error');
+                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to send OTP email. Please verify SMTP credentials or network settings.');
+                      console.error('Production SuperAdmin OTP Send Failure:', err);
+                      setError(errMsg);
+                      addToast(errMsg, 'error');
                     } finally {
                       setOtpLoading(false);
                     }

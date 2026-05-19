@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { AlertCircle, UserPlus, CheckCircle, ArrowRight } from 'lucide-react';
 import FormInput from '../components/FormInput';
 import apiService from '../services/api';
@@ -31,6 +32,7 @@ const Register = () => {
   const [isAdminAccessIdValidating, setIsAdminAccessIdValidating] = useState(false);
   const navigate = useNavigate();
   const { register, isAuthenticated, user } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -53,7 +55,7 @@ const Register = () => {
   }
 
   const nameRegex = /^[A-Za-z ]+$/;
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
   const mobileRegex = /^\d{10}$/;
 
@@ -304,9 +306,18 @@ const Register = () => {
         onResend={async () => {
           setOtpLoading(true);
           try {
+            console.log('Dispatching resendOTP request for:', formData.email);
             const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
-            return res.success;
+            if (res.success) {
+              addToast('A new OTP has been sent to your email!', 'success');
+              return true;
+            }
+            addToast(res.message || 'Failed to resend OTP', 'error');
+            return false;
           } catch (err) {
+            const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to resend OTP email.');
+            console.error('Production OTP Resend Failure:', err);
+            addToast(errMsg, 'error');
             return false;
           } finally {
             setOtpLoading(false);
@@ -369,15 +380,23 @@ const Register = () => {
                   className="btn-verify-input"
                   onClick={async () => {
                     setOtpLoading(true);
+                    setError('');
                     try {
+                      console.log('Dispatching sendOTP request for:', formData.email);
                       const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
                       if (res.success) {
                         setIsOTPModalOpen(true);
+                        addToast('OTP code sent successfully to your email!', 'success');
                       } else {
-                        setError(res.message);
+                        const errMsg = res.message || 'Failed to send OTP';
+                        setError(errMsg);
+                        addToast(errMsg, 'error');
                       }
                     } catch (err) {
-                      setError('Failed to send OTP');
+                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to send OTP email. Please verify SMTP credentials or network settings.');
+                      console.error('Production OTP Send Failure:', err);
+                      setError(errMsg);
+                      addToast(errMsg, 'error');
                     } finally {
                       setOtpLoading(false);
                     }

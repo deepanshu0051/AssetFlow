@@ -26,14 +26,14 @@ const Login = () => {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
 
   const validateField = (name, value) => {
     let errorMsg = '';
     if (name === 'email') {
       if (!value.trim()) errorMsg = 'Email is required';
-      else if (!emailRegex.test(value)) errorMsg = 'Enter a valid Gmail (lowercase letters required, only one dot allowed, must include at least one letter)';
+      else if (!emailRegex.test(value)) errorMsg = 'Enter a valid Gmail';
     } else if (name === 'password') {
       if (!value) errorMsg = 'Password is required';
       else if (!passwordRegex.test(value)) errorMsg = 'Password must be at least 6 characters and include a letter, number, and special character.';

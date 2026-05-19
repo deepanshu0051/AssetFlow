@@ -15,8 +15,8 @@ const SuperAdminSchema = new mongoose.Schema({
     required: [true, 'Please add an email'],
     unique: true,
     match: [
-      /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/,
-      'Enter a valid Gmail (lowercase letters required, only one dot allowed, must include at least one letter)'
+      /^[a-z0-9._%+-]+@gmail\.com$/i,
+      'Enter a valid Gmail address'
     ]
   },
   password: {

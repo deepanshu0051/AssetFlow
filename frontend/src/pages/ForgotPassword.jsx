@@ -20,7 +20,7 @@ const ForgotPassword = ({ role = 'admin' }) => {
   const isSuperAdmin = role === 'superadmin';
   const backLink = isSuperAdmin ? '/super-admin-auth' : '/login';
 
-  const emailRegex = /^(?=[^@]*[a-z])[a-z0-9]+(\.[a-z0-9]+)?@gmail\.com$/;
+  const emailRegex = /^[a-z0-9._%+-]+@gmail\.com$/i;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
