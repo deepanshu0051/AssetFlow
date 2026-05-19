@@ -33,56 +33,59 @@ const DashboardRedirect = () => {
 };
 
 import { NotificationProvider } from './context/NotificationContext';
+import { SidebarProvider } from './context/SidebarContext';
 
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <NotificationProvider>
-        <ToastProvider>
-        <AuthProvider>
-          <Router>
-            <SearchProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<PortalEntry />} />
-              <Route path="/superadmin/login" element={<SuperAdminAuth />} />
-              <Route path="/superadmin/register" element={<SuperAdminRegister />} />
-              <Route path="/admin/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/admin/forgot-password" element={<ForgotPassword role="admin" />} />
-              <Route path="/superadmin/forgot-password" element={<ForgotPassword role="superadmin" />} />
-              <Route path="/admin/reset-password/:token" element={<ResetPassword role="admin" />} />
-              <Route path="/superadmin/reset-password/:token" element={<ResetPassword role="superadmin" />} />
-              <Route path="/forgot-password" element={<ForgotPassword role="admin" />} />
-              <Route path="/reset-password/:token" element={<ResetPassword role="admin" />} />
+          <SidebarProvider>
+            <ToastProvider>
+            <AuthProvider>
+              <Router>
+                <SearchProvider>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<PortalEntry />} />
+                  <Route path="/superadmin/login" element={<SuperAdminAuth />} />
+                  <Route path="/superadmin/register" element={<SuperAdminRegister />} />
+                  <Route path="/admin/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/admin/forgot-password" element={<ForgotPassword role="admin" />} />
+                  <Route path="/superadmin/forgot-password" element={<ForgotPassword role="superadmin" />} />
+                  <Route path="/admin/reset-password/:token" element={<ResetPassword role="admin" />} />
+                  <Route path="/superadmin/reset-password/:token" element={<ResetPassword role="superadmin" />} />
+                  <Route path="/forgot-password" element={<ForgotPassword role="admin" />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword role="admin" />} />
 
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
-                <Route path="/machines" element={<Machines />} />
-                <Route path="/machines/add" element={<AddMachine />} />
-                <Route path="/machines/edit/:id" element={<AddMachine />} />
-                <Route path="/machines/:id" element={<MachineDetails />} />
-                <Route path="/gst" element={<GSTRecords />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-              
-              <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
-                <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
-              </Route>
+                  {/* Protected Routes */}
+                  <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
+                    <Route path="/machines" element={<Machines />} />
+                    <Route path="/machines/add" element={<AddMachine />} />
+                    <Route path="/machines/edit/:id" element={<AddMachine />} />
+                    <Route path="/machines/:id" element={<MachineDetails />} />
+                    <Route path="/gst" element={<GSTRecords />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
+                    <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+                  </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              </Route>
+                  <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  </Route>
 
-              {/* Centralized Redirector */}
-              <Route path="/dashboard" element={<DashboardRedirect />} />
-            </Routes>
-            </SearchProvider>
-          </Router>
-        </AuthProvider>
-        </ToastProvider>
+                  {/* Centralized Redirector */}
+                  <Route path="/dashboard" element={<DashboardRedirect />} />
+                </Routes>
+                </SearchProvider>
+              </Router>
+            </AuthProvider>
+            </ToastProvider>
+          </SidebarProvider>
         </NotificationProvider>
     </ThemeProvider>
     </ErrorBoundary>

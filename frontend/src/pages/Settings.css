@@ -284,3 +284,23 @@ input:checked + .slider:before {
   from { transform: scale(0.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+@media (max-width: 640px) {
+  .settings-page-wrapper {
+    padding: 1rem;
+  }
+  .settings-header {
+    margin-bottom: 1.5rem;
+  }
+  .settings-card {
+    padding: 1.5rem 1.25rem;
+    max-width: 100%;
+  }
+  .theme-toggle-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .theme-btn {
+    width: 100%;
+  }
+}

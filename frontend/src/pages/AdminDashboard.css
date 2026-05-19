@@ -77,3 +77,25 @@
     font-size: 1rem;
   }
 }
+
+@media (max-width: 640px) {
+  .dashboard-page {
+    padding: 16px 12px;
+  }
+  
+  .stats-grid {
+    margin-top: 16px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .recent-activity.section {
+    margin-top: 24px;
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+  
+  .section-header {
+    margin-bottom: 16px;
+  }
+}

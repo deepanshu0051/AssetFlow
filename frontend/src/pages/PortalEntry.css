@@ -140,6 +140,7 @@
     height: auto;
     min-height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 60px 20px;
   }
   .portal-title {

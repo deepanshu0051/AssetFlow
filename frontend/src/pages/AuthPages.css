@@ -246,13 +246,23 @@
 }
 
 @media (max-width: 640px) {
-  .auth-card {
-    padding: 32px 24px;
-    border-radius: 0;
-    max-width: 100%;
+  .auth-container {
+    padding: 16px;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+    max-width: 100%;
+    width: 100%;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-shadow: var(--shadow-lg);
   }
 }

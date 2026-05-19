@@ -43,7 +43,28 @@
 
 @media (max-width: 640px) {
   .plants-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .plant-compact-card {
+    aspect-ratio: auto;
+    min-height: auto;
+    padding: 12px 10px;
+    border-radius: 12px;
+  }
+  
+  .compact-plant-name {
+    font-size: 0.85rem;
+  }
+  
+  .compact-stats-label {
+    font-size: 0.55rem;
+  }
+  
+  .compact-stats-val {
+    font-size: 1.1rem;
   }
 }
 

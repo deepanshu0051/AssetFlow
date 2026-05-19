@@ -181,3 +181,37 @@ button {
 .text-sm { font-size: 0.825rem; }
 .text-2xl { font-size: 1.5rem; font-weight: 700; }
 
+@media (max-width: 640px) {
+  .page-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .page-actions .filters {
+    width: 100% !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-actions .filters select,
+  .page-actions .filters .form-control {
+    width: 100% !important;
+    flex: 1;
+  }
+  .page-actions .btn,
+  .page-actions button {
+    width: 100% !important;
+    justify-content: center;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .page-header .btn {
+    width: 100%;
+  }
+}
+

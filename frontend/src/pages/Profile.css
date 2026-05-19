@@ -428,3 +428,15 @@
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@media (max-width: 640px) {
+  .profile-page-wrapper {
+    padding: 1rem;
+  }
+  .glass-card {
+    padding: 1.5rem 1.25rem;
+  }
+  .profile-header-card {
+    margin-bottom: 1.5rem;
+  }
+}

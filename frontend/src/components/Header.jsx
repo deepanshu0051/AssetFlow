@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, User, LogOut, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
+import { Search, User, LogOut, Settings as SettingsIcon, User as UserIcon, Menu } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
+import { useSidebar } from '../context/SidebarContext';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import './Header.css';
@@ -12,6 +13,7 @@ const Header = ({ title }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
   const { searchTerm, updateSearchTerm } = useSearch();
+  const { toggleMobileSidebar } = useSidebar();
   const navigate = useNavigate();
 
   const userMenuRef = useRef(null);
@@ -38,6 +40,9 @@ const Header = ({ title }) => {
   return (
     <header className="main-header">
       <div className="header-left">
+        <button className="mobile-toggle-btn" onClick={toggleMobileSidebar} aria-label="Toggle Sidebar">
+          <Menu size={20} />
+        </button>
         <div className="header-title-container">
           <h2 className="header-title">
             {title}

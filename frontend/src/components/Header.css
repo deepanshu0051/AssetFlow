@@ -314,13 +314,38 @@
   background: var(--text-muted);
 }
 
+.mobile-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+  outline: none;
+}
+
+.mobile-toggle-btn:hover {
+  background-color: var(--accent-color);
+}
+
 @media (max-width: 768px) {
+  .mobile-toggle-btn {
+    display: flex;
+  }
+
   .main-header {
     padding: 0 16px;
   }
 
   .header-left {
     flex: 0 1 auto;
+    display: flex;
+    align-items: center;
   }
 
   .header-center {

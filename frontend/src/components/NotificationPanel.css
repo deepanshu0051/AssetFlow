@@ -320,3 +320,25 @@
   margin-bottom: 20px;
   opacity: 0.3;
 }
+
+@media (max-width: 640px) {
+  .notification-side-panel {
+    width: 85% !important;
+  }
+  .panel-header {
+    padding: 16px;
+  }
+  .panel-content {
+    padding: 16px;
+    gap: 12px;
+  }
+  .notification-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+  .modal-content-panel {
+    width: 95%;
+    padding: 20px;
+    border-radius: 16px;
+  }
+}

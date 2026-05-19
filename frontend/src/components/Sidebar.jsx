@@ -15,15 +15,18 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
+import { useSidebar } from '../context/SidebarContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const { clearSearchTerm } = useSearch();
+  const { closeMobileSidebar } = useSidebar();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     clearSearchTerm();
+    closeMobileSidebar();
     const role = logout();
     const redirectPath = role === 'superadmin' ? '/superadmin/login' : '/admin/login';
     navigate(redirectPath, { replace: true });
@@ -68,7 +71,7 @@ const Sidebar = () => {
                   <NavLink 
                     to={item.path} 
                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    onClick={() => {}}
+                    onClick={closeMobileSidebar}
                   >
                     <item.icon className="nav-icon" size={18} />
                     <span>{item.name}</span>
@@ -82,7 +85,11 @@ const Sidebar = () => {
       
       <div className="sidebar-footer">
         <div className="footer-nav">
-          <NavLink to="/settings" className={({ isActive }) => `nav-link footer-link ${isActive ? 'active' : ''}`}>
+          <NavLink 
+            to="/settings" 
+            className={({ isActive }) => `nav-link footer-link ${isActive ? 'active' : ''}`}
+            onClick={closeMobileSidebar}
+          >
             <Settings className="nav-icon" size={18} />
             <span>Settings</span>
           </NavLink>
