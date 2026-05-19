@@ -160,3 +160,24 @@
   transform: none;
   box-shadow: none;
 }
+
+@media (max-width: 640px) {
+  .sa-auth-container {
+    padding: 16px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    width: 100vw;
+  }
+
+  .sa-auth-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+    max-width: 100%;
+    width: 100%;
+    min-height: auto;
+    box-shadow: var(--shadow-lg);
+  }
+}

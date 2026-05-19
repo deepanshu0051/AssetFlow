@@ -314,6 +314,23 @@
   background: var(--text-muted);
 }
 
+.header-title-container {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 .mobile-toggle-btn {
   display: none;
   background: none;
@@ -358,5 +375,39 @@
 
   .header-search {
     display: none;
+  }
+
+  .header-title {
+    font-size: 1.05rem;
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-header {
+    padding: 0 10px;
+  }
+  
+  .mobile-toggle-btn {
+    padding: 6px;
+    margin-right: 4px;
+  }
+  
+  .header-title {
+    font-size: 0.95rem;
+    max-width: 110px;
+  }
+  
+  .header-actions {
+    gap: 8px;
+  }
+  
+  .header-btn {
+    padding: 6px;
+  }
+  
+  .header-user {
+    width: 28px;
+    height: 28px;
   }
 }

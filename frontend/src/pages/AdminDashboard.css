@@ -99,3 +99,17 @@
     margin-bottom: 16px;
   }
 }
+
+@media (max-width: 480px) {
+  .admin-header-content {
+    gap: 8px;
+  }
+
+  .header-title-text {
+    font-size: 0.9rem !important;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

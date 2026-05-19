@@ -42,9 +42,19 @@
 }
 
 @media (max-width: 640px) {
+  .super-admin-dashboard .px-8 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .super-admin-dashboard h2 {
+    font-size: 1.35rem !important;
+    margin-bottom: 12px !important;
+  }
+
   .plants-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 16px;
   }
   
@@ -63,8 +73,21 @@
     font-size: 0.55rem;
   }
   
-  .compact-stats-val {
-    font-size: 1.1rem;
+  .compact-stats-value {
+    font-size: 1.05rem;
+  }
+
+  .delete-modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .delete-modal-card {
+    padding: 24px 16px;
+  }
+
+  .select-plant-placeholder {
+    padding: 32px 16px !important;
   }
 }
 
@@ -478,15 +501,5 @@
 @media (max-width: 1200px) {
   .plant-compact-card {
     min-height: 130px;
-  }
-}
-
-@media (max-width: 640px) {
-  .delete-modal-actions {
-    flex-direction: column;
-  }
-  
-  .delete-modal-card {
-    padding: 28px 20px;
   }
 }
