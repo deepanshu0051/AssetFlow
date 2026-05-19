@@ -78,7 +78,10 @@ const FormInput = ({ label, type = 'text', placeholder, value, onChange, onBlur,
               required={required}
               maxLength={maxLength}
               readOnly={readOnly}
-              style={readOnly ? { backgroundColor: 'var(--accent-color)', cursor: 'not-allowed' } : {}}
+              style={{
+                ...(readOnly ? { backgroundColor: 'var(--accent-color)', cursor: 'not-allowed' } : {}),
+                ...(rightAction ? { paddingRight: '85px' } : isPassword ? { paddingRight: '45px' } : {})
+              }}
               {...props}
             />
             {isPassword ? (

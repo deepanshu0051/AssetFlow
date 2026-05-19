@@ -123,7 +123,11 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
   const { role } = req.body;
   const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
+  console.log(`[PROD DEBUG] sendOTP requested for email: "${email}", role: "${role}"`);
+  console.log(`[PROD DEBUG] SMTP Config Check: EMAIL_HOST="${process.env.EMAIL_HOST || 'smtp.gmail.com'}", EMAIL_PORT="${process.env.EMAIL_PORT || 587}", EMAIL_USER exists: ${!!process.env.EMAIL_USER}, EMAIL_PASS exists: ${!!process.env.EMAIL_PASS}`);
+
   if (!email || !role) {
+    console.warn('[PROD DEBUG] sendOTP validation failed: Missing email or role');
     return res.status(400).json({
       success: false,
       message: 'Please provide email and role'
@@ -132,8 +136,10 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
 
   // Check if user already exists
   const Model = role === 'superadmin' ? SuperAdmin : Admin;
+  console.log(`[PROD DEBUG] Checking existing ${role} user...`);
   const existingUser = await Model.findOne({ email });
   if (existingUser) {
+    console.warn(`[PROD DEBUG] sendOTP rejected: Email "${email}" is already registered in ${role}`);
     return res.status(400).json({
       success: false,
       message: 'Email already registered'
@@ -146,15 +152,18 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
   // Save/Update OTP in DB
-  await OTP.findOneAndUpdate(
+  console.log('[PROD DEBUG] Saving OTP record in database...');
+  const otpRecord = await OTP.findOneAndUpdate(
     { email, role },
     { otp: hashedOtp, expiresAt, isVerified: false },
     { upsert: true, new: true }
   );
+  console.log(`[PROD DEBUG] OTP record updated successfully in database. ID: ${otpRecord._id}`);
 
   // Send Email
   try {
-    await sendEmail({
+    console.log(`[PROD DEBUG] Dispatching Nodemailer sendEmail to: ${email}...`);
+    const emailInfo = await sendEmail({
       to: email,
       subject: 'Email Verification OTP - AssetFlow',
       html: `
@@ -170,15 +179,17 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
       `
     });
 
+    console.log('[PROD DEBUG] sendEmail succeeded. Info:', emailInfo ? emailInfo.messageId : 'No info returned');
     res.status(200).json({
       success: true,
       message: 'OTP sent to your email'
     });
   } catch (err) {
-    console.error('Email send error:', err);
+    console.error('[PROD DEBUG] Email sending exception caught in sendOTP controller:', err);
     res.status(500).json({
       success: false,
-      message: 'Failed to send OTP email'
+      message: 'Failed to send OTP email',
+      errorDetails: err?.message || 'Unknown SMTP error'
     });
   }
 });

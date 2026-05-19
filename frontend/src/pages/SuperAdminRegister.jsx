@@ -249,12 +249,15 @@ const SuperAdminRegister = () => {
         loading={otpLoading}
         onVerify={async (otp) => {
           setOtpLoading(true);
+          const cleanEmail = formData.email.trim();
           try {
+            console.log('Dispatching verifyOTP request for superadmin:', cleanEmail);
             const res = await api.verifyOTP({ 
-              email: formData.email, 
+              email: cleanEmail, 
               role: 'superadmin', 
               otp 
             });
+            console.log('verifyOTP response:', res);
             if (res.success) {
               setIsEmailVerified(true);
               setIsOTPModalOpen(false);
@@ -263,16 +266,19 @@ const SuperAdminRegister = () => {
             }
             return { success: false, message: res.message };
           } catch (err) {
-            return { success: false, message: 'Verification failed' };
+            console.error('verifyOTP exception:', err);
+            const errMsg = err?.message || (typeof err === 'string' ? err : 'Verification failed');
+            return { success: false, message: errMsg };
           } finally {
             setOtpLoading(false);
           }
         }}
         onResend={async () => {
           setOtpLoading(true);
+          const cleanEmail = formData.email.trim();
           try {
-            console.log('Dispatching resendOTP request for superadmin:', formData.email);
-            const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
+            console.log('Dispatching resendOTP request for superadmin:', cleanEmail);
+            const res = await api.sendOTP({ email: cleanEmail, role: 'superadmin' });
             if (res.success) {
               addToast('New OTP sent to your email', 'success');
               return true;
@@ -342,7 +348,7 @@ const SuperAdminRegister = () => {
             value={formData.email}
             onChange={handleChange}
             onBlur={() => handleBlur('email')}
-            isValid={emailRegex.test(formData.email)}
+            isValid={emailRegex.test(formData.email.trim())}
             error={fieldErrors.email}
             required
             readOnly={isEmailVerified}
@@ -354,20 +360,24 @@ const SuperAdminRegister = () => {
                   type="button"
                   className="sa-verify-btn"
                   onClick={async () => {
-                    if (!emailRegex.test(formData.email)) {
+                    const cleanEmail = formData.email.trim();
+                    console.log('SuperAdmin Verify button clicked with email:', cleanEmail);
+                    if (!emailRegex.test(cleanEmail)) {
                       setFieldErrors(prev => ({ ...prev, email: 'Enter a valid Gmail' }));
                       return;
                     }
                     setOtpLoading(true);
                     setError('');
                     try {
-                      console.log('Dispatching sendOTP request for superadmin:', formData.email);
-                      const res = await api.sendOTP({ email: formData.email, role: 'superadmin' });
+                      console.log('Dispatching sendOTP request for superadmin:', cleanEmail);
+                      const res = await api.sendOTP({ email: cleanEmail, role: 'superadmin' });
+                      console.log('SuperAdmin sendOTP API success response:', res);
                       if (res.success) {
                         setIsOTPModalOpen(true);
                         addToast('OTP sent to your email', 'success');
                       } else {
                         const errMsg = res.message || 'Failed to send OTP';
+                        console.error('SuperAdmin sendOTP API error response:', res);
                         setError(errMsg);
                         addToast(errMsg, 'error');
                       }
@@ -380,7 +390,7 @@ const SuperAdminRegister = () => {
                       setOtpLoading(false);
                     }
                   }}
-                  disabled={otpLoading || !emailRegex.test(formData.email)}
+                  disabled={otpLoading || !emailRegex.test(formData.email.trim())}
                 >
                   {otpLoading ? '...' : 'Verify'}
                 </button>

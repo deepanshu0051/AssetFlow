@@ -30,12 +30,16 @@ const sendEmail = async (options) => {
   };
 
   try {
+    console.log('[PROD DEBUG SMTP] Verifying transporter connection & authentication credentials...');
+    await transporter.verify();
+    console.log('[PROD DEBUG SMTP] Transporter verification succeeded! Ready to deliver email.');
+
     // Send mail
     const info = await transporter.sendMail(message);
-    console.log('Email sent successfully:', info.messageId);
+    console.log('[PROD DEBUG SMTP] Email sent successfully:', info.messageId);
     return info;
   } catch (error) {
-    console.error('Nodemailer Error Details:', error);
+    console.error('[PROD DEBUG SMTP] Transporter/Mail delivery error caught:', error);
     throw error;
   }
 };

@@ -63,9 +63,11 @@ api.interceptors.response.use(
 
     // Check if the error response is actually an HTML page (Render 404 or hosting issue)
     if (typeof error.response?.data === 'string' && error.response.data.includes('<!DOCTYPE html>')) {
+      console.error('[PROD DEBUG API] Received HTML response instead of JSON. Request config:', error.config);
       return Promise.reject('API Configuration Error: The server returned an HTML page instead of JSON. Please ensure your Render backend service is live and running at https://assetflow-fpr8.onrender.com/api.');
     }
 
+    console.error('[PROD DEBUG API] Request failed. URL:', error.config?.url, 'Status:', error.response?.status, 'Response:', error.response?.data, 'Message:', error.message);
     return Promise.reject(error.response?.data || error.message);
   }
 );

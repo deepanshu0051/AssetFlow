@@ -285,12 +285,15 @@ const Register = () => {
         loading={otpLoading}
         onVerify={async (otp) => {
           setOtpLoading(true);
+          const cleanEmail = formData.email.trim();
           try {
+            console.log('Dispatching verifyOTP request for:', cleanEmail);
             const res = await apiService.verifyOTP({ 
-              email: formData.email, 
+              email: cleanEmail, 
               role: 'admin', 
               otp 
             });
+            console.log('verifyOTP response:', res);
             if (res.success) {
               setIsEmailVerified(true);
               setIsOTPModalOpen(false);
@@ -298,16 +301,19 @@ const Register = () => {
             }
             return { success: false, message: res.message };
           } catch (err) {
-            return { success: false, message: 'Verification failed' };
+            console.error('verifyOTP exception:', err);
+            const errMsg = err?.message || (typeof err === 'string' ? err : 'Verification failed');
+            return { success: false, message: errMsg };
           } finally {
             setOtpLoading(false);
           }
         }}
         onResend={async () => {
           setOtpLoading(true);
+          const cleanEmail = formData.email.trim();
           try {
-            console.log('Dispatching resendOTP request for:', formData.email);
-            const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+            console.log('Dispatching resendOTP request for:', cleanEmail);
+            const res = await apiService.sendOTP({ email: cleanEmail, role: 'admin' });
             if (res.success) {
               addToast('A new OTP has been sent to your email!', 'success');
               return true;
@@ -366,7 +372,7 @@ const Register = () => {
             value={formData.email}
             onChange={handleChange}
             onBlur={() => handleBlur('email')}
-            isValid={emailRegex.test(formData.email)}
+            isValid={emailRegex.test(formData.email.trim())}
             error={fieldErrors.email}
             autoComplete="off"
             required
@@ -379,16 +385,20 @@ const Register = () => {
                   type="button"
                   className="btn-verify-input"
                   onClick={async () => {
+                    const cleanEmail = formData.email.trim();
+                    console.log('Verify button clicked with email:', cleanEmail);
                     setOtpLoading(true);
                     setError('');
                     try {
-                      console.log('Dispatching sendOTP request for:', formData.email);
-                      const res = await apiService.sendOTP({ email: formData.email, role: 'admin' });
+                      console.log('Dispatching sendOTP request for:', cleanEmail);
+                      const res = await apiService.sendOTP({ email: cleanEmail, role: 'admin' });
+                      console.log('sendOTP API success response:', res);
                       if (res.success) {
                         setIsOTPModalOpen(true);
                         addToast('OTP code sent successfully to your email!', 'success');
                       } else {
                         const errMsg = res.message || 'Failed to send OTP';
+                        console.error('sendOTP API error response:', res);
                         setError(errMsg);
                         addToast(errMsg, 'error');
                       }
@@ -401,7 +411,7 @@ const Register = () => {
                       setOtpLoading(false);
                     }
                   }}
-                  disabled={otpLoading || !emailRegex.test(formData.email)}
+                  disabled={otpLoading || !emailRegex.test(formData.email.trim())}
                 >
                   {otpLoading ? '...' : 'Verify'}
                 </button>
