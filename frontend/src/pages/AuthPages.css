@@ -249,9 +249,13 @@
   .auth-container {
     padding: 16px;
     min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
   }
 
   .auth-card {
@@ -263,6 +267,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-sizing: border-box;
     box-shadow: var(--shadow-lg);
   }
 }
