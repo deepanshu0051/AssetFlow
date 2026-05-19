@@ -137,21 +137,46 @@
 
 @media (max-width: 600px) {
   .portal-container {
-    height: auto;
-    min-height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 60px 20px;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .portal-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+  .portal-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
   }
   .portal-options {
-    gap: 2rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1.25rem;
+    justify-content: center;
+    align-items: center;
   }
   .portal-circle {
-    width: 160px;
-    height: 160px;
+    width: 120px;
+    height: 120px;
+  }
+  .circle-inner {
+    gap: 0.6rem;
+  }
+  .circle-inner i {
+    font-size: 1.8rem;
+  }
+  .circle-inner span {
+    font-size: 0.85rem;
+  }
+  .portal-footer {
+    margin-top: 2.5rem;
+    font-size: 0.8rem;
   }
 }
 
