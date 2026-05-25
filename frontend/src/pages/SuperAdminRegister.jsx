@@ -26,6 +26,7 @@ const SuperAdminRegister = () => {
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
   const [isSpecialAdminIdCorrect, setIsSpecialAdminIdCorrect] = useState(false);
   const [isSpecialAdminIdValidating, setIsSpecialAdminIdValidating] = useState(false);
 
@@ -247,17 +248,18 @@ const SuperAdminRegister = () => {
         onClose={() => setIsOTPModalOpen(false)}
         email={formData.email.trim()}
         loading={otpLoading}
+        initialError={otpError}
         onVerify={async (otp) => {
           setOtpLoading(true);
           const cleanEmail = formData.email.trim();
           try {
-            console.log('Dispatching verifyOTP request for superadmin:', cleanEmail);
+            console.log('[DEBUG SuperAdmin OTP] Verifying OTP for:', cleanEmail);
             const res = await api.verifyOTP({ 
               email: cleanEmail, 
               role: 'superadmin', 
               otp 
             });
-            console.log('verifyOTP response:', res);
+            console.log('[DEBUG SuperAdmin OTP] Verify response:', res);
             if (res.success) {
               setIsEmailVerified(true);
               setIsOTPModalOpen(false);
@@ -266,7 +268,7 @@ const SuperAdminRegister = () => {
             }
             return { success: false, message: res.message };
           } catch (err) {
-            console.error('verifyOTP exception:', err);
+            console.error('[DEBUG SuperAdmin OTP] Verify exception:', err);
             const errMsg = err?.message || (typeof err === 'string' ? err : 'Verification failed');
             return { success: false, message: errMsg };
           } finally {
@@ -276,8 +278,9 @@ const SuperAdminRegister = () => {
         onResend={async () => {
           setOtpLoading(true);
           const cleanEmail = formData.email.trim();
+          setOtpError('');
           try {
-            console.log('Dispatching resendOTP request for superadmin:', cleanEmail);
+            console.log('[DEBUG SuperAdmin OTP] Resending OTP for:', cleanEmail);
             const res = await api.sendOTP({ email: cleanEmail, role: 'superadmin' });
             if (res.success) {
               addToast('New OTP sent to your email', 'success');
@@ -287,7 +290,7 @@ const SuperAdminRegister = () => {
             return false;
           } catch (err) {
             const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to resend OTP email.');
-            console.error('Production SuperAdmin OTP Resend Failure:', err);
+            console.error('[DEBUG SuperAdmin OTP] Resend failure:', err);
             addToast(errMsg, 'error');
             return false;
           } finally {
@@ -361,30 +364,31 @@ const SuperAdminRegister = () => {
                   className="sa-verify-btn"
                   onClick={async () => {
                     const cleanEmail = formData.email.trim();
-                    console.log('SuperAdmin Verify button clicked with email:', cleanEmail);
+                    console.log('[DEBUG SuperAdmin OTP] Verify button clicked. Opening modal instantly.');
                     if (!emailRegex.test(cleanEmail)) {
                       setFieldErrors(prev => ({ ...prev, email: 'Enter a valid Gmail' }));
                       return;
                     }
+                    
+                    setIsOTPModalOpen(true);
                     setOtpLoading(true);
+                    setOtpError('');
                     setError('');
                     try {
-                      console.log('Dispatching sendOTP request for superadmin:', cleanEmail);
+                      console.log('[DEBUG SuperAdmin OTP] Dispatching sendOTP request for:', cleanEmail);
                       const res = await api.sendOTP({ email: cleanEmail, role: 'superadmin' });
-                      console.log('SuperAdmin sendOTP API success response:', res);
+                      console.log('[DEBUG SuperAdmin OTP] sendOTP API response:', res);
                       if (res.success) {
-                        setIsOTPModalOpen(true);
                         addToast('OTP sent to your email', 'success');
                       } else {
                         const errMsg = res.message || 'Failed to send OTP';
-                        console.error('SuperAdmin sendOTP API error response:', res);
-                        setError(errMsg);
+                        setOtpError(errMsg);
                         addToast(errMsg, 'error');
                       }
                     } catch (err) {
-                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to send OTP email. Please verify SMTP credentials or network settings.');
-                      console.error('Production SuperAdmin OTP Send Failure:', err);
-                      setError(errMsg);
+                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Network error or cold start delay. Please try again.');
+                      console.error('[DEBUG SuperAdmin OTP] sendOTP Exception:', err);
+                      setOtpError(errMsg);
                       addToast(errMsg, 'error');
                     } finally {
                       setOtpLoading(false);

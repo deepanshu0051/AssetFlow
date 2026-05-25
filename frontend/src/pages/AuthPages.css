@@ -170,7 +170,7 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
@@ -226,11 +226,11 @@
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .btn-verify-input:hover {

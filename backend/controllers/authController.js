@@ -225,7 +225,7 @@ exports.verifyOTP = asyncHandler(async (req, res, next) => {
     });
   }
 
-  if (otp !== '123456' && otpRecord.otp !== hashedOtp) {
+  if (otpRecord.otp !== hashedOtp) {
     return res.status(400).json({
       success: false,
       message: 'Invalid OTP'

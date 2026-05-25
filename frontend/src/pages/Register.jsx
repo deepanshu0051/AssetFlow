@@ -28,6 +28,7 @@ const Register = () => {
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
   const [isAdminAccessIdCorrect, setIsAdminAccessIdCorrect] = useState(false);
   const [isAdminAccessIdValidating, setIsAdminAccessIdValidating] = useState(false);
   const navigate = useNavigate();
@@ -283,17 +284,18 @@ const Register = () => {
         onClose={() => setIsOTPModalOpen(false)}
         email={formData.email.trim()}
         loading={otpLoading}
+        initialError={otpError}
         onVerify={async (otp) => {
           setOtpLoading(true);
           const cleanEmail = formData.email.trim();
           try {
-            console.log('Dispatching verifyOTP request for:', cleanEmail);
+            console.log('[DEBUG OTP] Verifying OTP for:', cleanEmail);
             const res = await apiService.verifyOTP({ 
               email: cleanEmail, 
               role: 'admin', 
               otp 
             });
-            console.log('verifyOTP response:', res);
+            console.log('[DEBUG OTP] Verify response:', res);
             if (res.success) {
               setIsEmailVerified(true);
               setIsOTPModalOpen(false);
@@ -301,7 +303,7 @@ const Register = () => {
             }
             return { success: false, message: res.message };
           } catch (err) {
-            console.error('verifyOTP exception:', err);
+            console.error('[DEBUG OTP] Verify exception:', err);
             const errMsg = err?.message || (typeof err === 'string' ? err : 'Verification failed');
             return { success: false, message: errMsg };
           } finally {
@@ -310,9 +312,10 @@ const Register = () => {
         }}
         onResend={async () => {
           setOtpLoading(true);
+          setOtpError('');
           const cleanEmail = formData.email.trim();
           try {
-            console.log('Dispatching resendOTP request for:', cleanEmail);
+            console.log('[DEBUG OTP] Resending OTP for:', cleanEmail);
             const res = await apiService.sendOTP({ email: cleanEmail, role: 'admin' });
             if (res.success) {
               addToast('A new OTP has been sent to your email!', 'success');
@@ -322,7 +325,7 @@ const Register = () => {
             return false;
           } catch (err) {
             const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to resend OTP email.');
-            console.error('Production OTP Resend Failure:', err);
+            console.error('[DEBUG OTP] Resend failure:', err);
             addToast(errMsg, 'error');
             return false;
           } finally {
@@ -386,26 +389,30 @@ const Register = () => {
                   className="btn-verify-input"
                   onClick={async () => {
                     const cleanEmail = formData.email.trim();
-                    console.log('Verify button clicked with email:', cleanEmail);
+                    console.log('[DEBUG OTP] Verify button clicked. Opening modal instantly.');
+                    
+                    // Open modal immediately to provide instant feedback
+                    setIsOTPModalOpen(true);
                     setOtpLoading(true);
+                    setOtpError('');
                     setError('');
+
                     try {
-                      console.log('Dispatching sendOTP request for:', cleanEmail);
+                      console.log('[DEBUG OTP] Dispatching sendOTP request for:', cleanEmail);
                       const res = await apiService.sendOTP({ email: cleanEmail, role: 'admin' });
-                      console.log('sendOTP API success response:', res);
+                      console.log('[DEBUG OTP] sendOTP API response:', res);
+                      
                       if (res.success) {
-                        setIsOTPModalOpen(true);
                         addToast('OTP code sent successfully to your email!', 'success');
                       } else {
                         const errMsg = res.message || 'Failed to send OTP';
-                        console.error('sendOTP API error response:', res);
-                        setError(errMsg);
+                        setOtpError(errMsg);
                         addToast(errMsg, 'error');
                       }
                     } catch (err) {
-                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Failed to send OTP email. Please verify SMTP credentials or network settings.');
-                      console.error('Production OTP Send Failure:', err);
-                      setError(errMsg);
+                      const errMsg = err?.message || (typeof err === 'string' ? err : 'Network error or cold start delay. Please try again.');
+                      console.error('[DEBUG OTP] sendOTP Exception:', err);
+                      setOtpError(errMsg);
                       addToast(errMsg, 'error');
                     } finally {
                       setOtpLoading(false);

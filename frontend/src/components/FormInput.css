@@ -28,7 +28,7 @@
   border-radius: 12px;
   font-size: 0.95rem;
   color: var(--text-main);
-  transition: all 0.2s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
   outline: none;
   appearance: none;
 }
@@ -162,7 +162,7 @@ select.form-control option {
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
   background-color: var(--bg-surface);
-  transition: all 0.2s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
   overflow: hidden;
 }
 

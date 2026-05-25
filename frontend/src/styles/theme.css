@@ -74,10 +74,7 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.9);
 }
 
-/* Global Transitions for Theme Switching */
-* {
-  transition: background-color var(--transition-medium), 
-              border-color var(--transition-medium), 
-              color var(--transition-fast),
-              box-shadow var(--transition-medium);
+/* Global Transitions for Theme Switching - Scoped specifically to prevent mobile lag */
+body {
+  transition: background-color var(--transition-medium), color var(--transition-fast);
 }
