@@ -64,8 +64,12 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend, loading: externa
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="otp-modal-overlay">
+    <div className="otp-modal-overlay" onClick={(e) => {
+      if (e.target === e.currentTarget) onClose();
+    }}>
       <div className={`otp-modal-content card fade-in ${externalLoading && otpValue === '' ? 'pulse' : ''}`}>
         <button className="otp-close-btn" type="button" onClick={onClose} aria-label="Close modal">
           <X size={20} />
