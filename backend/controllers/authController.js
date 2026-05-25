@@ -5,6 +5,7 @@ const OTP = require('../models/OTP');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendTokenResponse } = require('../utils/authUtils');
 const sendEmail = require('../utils/sendEmail');
+const { logger } = require('../middleware/logger');
 
 // @desc    Register Admin or SuperAdmin
 // @route   POST /api/auth/register
@@ -123,8 +124,7 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
   const { role } = req.body;
   const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
-  console.log(`[PROD DEBUG] sendOTP requested for email: "${email}", role: "${role}"`);
-  console.log(`[PROD DEBUG] SMTP Config Check: EMAIL_HOST="${process.env.EMAIL_HOST || 'smtp.gmail.com'}", EMAIL_PORT="${process.env.EMAIL_PORT || 587}", EMAIL_USER exists: ${!!process.env.EMAIL_USER}, EMAIL_PASS exists: ${!!process.env.EMAIL_PASS}`);
+  logger.info(`sendOTP requested for email: "${email}", role: "${role}"`);
 
   if (!email || !role) {
     console.warn('[PROD DEBUG] sendOTP validation failed: Missing email or role');
@@ -152,17 +152,17 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
   // Save/Update OTP in DB
-  console.log('[PROD DEBUG] Saving OTP record in database...');
+  logger.info('Saving OTP record in database...');
   const otpRecord = await OTP.findOneAndUpdate(
     { email, role },
     { otp: hashedOtp, expiresAt, isVerified: false },
     { upsert: true, new: true }
   );
-  console.log(`[PROD DEBUG] OTP record updated successfully in database. ID: ${otpRecord._id}`);
+  logger.info(`OTP record updated successfully. ID: ${otpRecord._id}`);
 
   // Send Email
   try {
-    console.log(`[PROD DEBUG] Dispatching Nodemailer sendEmail to: ${email}...`);
+    logger.info(`Dispatching sendEmail to: ${email}...`);
     const emailInfo = await sendEmail({
       to: email,
       subject: 'Email Verification OTP - AssetFlow',
@@ -179,13 +179,13 @@ exports.sendOTP = asyncHandler(async (req, res, next) => {
       `
     });
 
-    console.log('[PROD DEBUG] sendEmail succeeded. Info:', emailInfo ? emailInfo.messageId : 'No info returned');
+    logger.info(`sendEmail succeeded. MessageID: ${emailInfo ? emailInfo.messageId : 'N/A'}`);
     res.status(200).json({
       success: true,
       message: 'OTP sent to your email'
     });
   } catch (err) {
-    console.error('[PROD DEBUG] Email sending exception caught in sendOTP controller:', err);
+    logger.error(`Email delivery failure in sendOTP: ${err.message}`, { stack: err.stack });
     res.status(500).json({
       success: false,
       message: 'Failed to send OTP email',
